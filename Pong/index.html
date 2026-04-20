@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pong</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="page-header" aria-label="Game title">
+        <h1 class="page-title">PONG</h1>
+      </header>
+
+      <section class="game-area">
+        <div class="canvas-wrap">
+          <canvas
+            id="game"
+            width="680"
+            height="400"
+            aria-label="Pong game court"
+            role="img"
+          ></canvas>
+
+          <div class="scanlines" aria-hidden="true"></div>
+
+          <div class="overlay" id="overlay">
+            <div class="overlay-card">
+              <p class="eyebrow" id="overlay-eyebrow">Classic Arcade Reimagined</p>
+              <h1 class="overlay-title" id="overlay-title">PONG</h1>
+              <p class="overlay-text" id="overlay-text">
+                Two-player neon rally. First to 7 wins.
+              </p>
+              <div class="mode-select" id="mode-select" role="group" aria-label="Game mode">
+                <button
+                  class="mode-button is-active"
+                  id="mode-two-player"
+                  type="button"
+                  data-mode="pvp"
+                  aria-pressed="true"
+                >
+                  2 Players
+                </button>
+                <button
+                  class="mode-button"
+                  id="mode-bot"
+                  type="button"
+                  data-mode="bot"
+                  aria-pressed="false"
+                >
+                  Vs Bot
+                </button>
+              </div>
+              <div class="controls-popup" id="controls-popup" aria-label="Controls">
+                <article class="control-card">
+                  <p class="control-title" id="left-control-title">Player 1</p>
+                  <div class="key-stack" aria-hidden="true" id="left-control-visual">
+                    <span class="keycap">W</span>
+                    <span class="keycap">S</span>
+                  </div>
+                  <p class="control-copy" id="left-control-copy">Move the left paddle up and down.</p>
+                </article>
+                <article class="control-card" id="right-control-card">
+                  <p class="control-title" id="right-control-title">Player 2</p>
+                  <div class="key-stack" aria-hidden="true" id="right-control-visual">
+                    <span class="keycap keycap-arrow">↑</span>
+                    <span class="keycap keycap-arrow">↓</span>
+                  </div>
+                  <p class="control-copy" id="right-control-copy">Arrow keys control the right paddle.</p>
+                </article>
+                <article class="control-card control-card-system">
+                  <p class="control-title">System</p>
+                  <div class="key-stack key-stack-wide" aria-hidden="true">
+                    <span class="keycap keycap-space">SPACE</span>
+                  </div>
+                  <p class="control-copy">Pause or resume the match any time.</p>
+                </article>
+              </div>
+              <div class="overlay-actions">
+                <button class="overlay-button" id="primary-action" type="button">
+                  Start Match
+                </button>
+              </div>
+              <p class="controls-text" id="controls-text">
+                Player 1: W / S · Player 2: ↑ / ↓ · Space: Pause
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="status-bar" aria-label="Status and controls">
+      </section>
+    </main>
+
+    <div class="sr-only" aria-live="polite">Player 1 score: <span id="score-left">0</span></div>
+    <div class="sr-only" aria-live="polite">Player 2 score: <span id="score-right">0</span></div>
+    <div class="sr-only" id="announcer" aria-live="polite"></div>
+
+    <script src="sound-library.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

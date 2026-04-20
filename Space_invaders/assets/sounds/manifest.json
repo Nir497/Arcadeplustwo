@@ -1,0 +1,108 @@
+{
+  "format": "wav",
+  "style": "retro-arcade synthesized",
+  "files": [
+    {
+      "file": "player_shoot.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.11
+    },
+    {
+      "file": "alien_shoot.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.18
+    },
+    {
+      "file": "alien_hit.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.12
+    },
+    {
+      "file": "player_hit.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.32
+    },
+    {
+      "file": "shield_hit.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.09
+    },
+    {
+      "file": "ufo_loop.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.82
+    },
+    {
+      "file": "ufo_hit.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.28
+    },
+    {
+      "file": "countdown_beep.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.14
+    },
+    {
+      "file": "countdown_go.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.26
+    },
+    {
+      "file": "extra_life.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.42
+    },
+    {
+      "file": "wave_start.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.36
+    },
+    {
+      "file": "game_over.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.6
+    },
+    {
+      "file": "pause_toggle.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.08
+    },
+    {
+      "file": "alien_step_1.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.13
+    },
+    {
+      "file": "alien_step_2.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.13
+    },
+    {
+      "file": "alien_step_3.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.13
+    },
+    {
+      "file": "alien_step_4.wav",
+      "sampleRate": 22050,
+      "channels": 1,
+      "durationSeconds": 0.13
+    }
+  ]
+}

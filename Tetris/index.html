@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tetris</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">1984-1985 • Alexey Pajitnov</p>
+        <h1>Tetris</h1>
+        <p class="subtitle">
+          Classic pressure, modern controls. Build clean wells, chase Tetrises,
+          and survive the speed curve.
+        </p>
+      </header>
+
+      <main class="layout">
+        <aside class="panel side-panel">
+          <section class="stack">
+            <h2>Mode</h2>
+            <div class="mode-card">
+              <p>A-Type Marathon</p>
+              <span>Classic ruleset from the mechanics document</span>
+            </div>
+          </section>
+
+          <section class="stack">
+            <h2>Stats</h2>
+            <dl class="stats">
+              <div>
+                <dt>Score</dt>
+                <dd id="score">0</dd>
+              </div>
+              <div>
+                <dt>Level</dt>
+                <dd id="level">0</dd>
+              </div>
+              <div>
+                <dt>Lines</dt>
+                <dd id="lines">0</dd>
+              </div>
+              <div>
+                <dt>Best</dt>
+                <dd id="best-score">0</dd>
+              </div>
+            </dl>
+          </section>
+        </aside>
+
+        <section class="play-area">
+          <div class="panel board-panel">
+            <div class="board-frame">
+              <canvas
+                id="board"
+                width="320"
+                height="640"
+                aria-label="Tetris board"
+              ></canvas>
+              <div class="overlay hidden" id="overlay" aria-live="polite">
+                <div class="overlay-card">
+                  <p id="overlay-kicker">Press Enter</p>
+                  <h2 id="overlay-title">Tetris</h2>
+                  <p id="overlay-message">
+                    Use the keyboard to start the run.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel side-panel">
+          <section class="stack">
+            <h2>Next</h2>
+            <div class="queue" id="next-queue" aria-label="Next pieces"></div>
+          </section>
+
+          <section class="stack">
+            <h2>Controls</h2>
+            <ul class="controls">
+              <li><span>Move</span><strong>← →</strong></li>
+              <li><span>Soft drop</span><strong>↓</strong></li>
+              <li><span>Rotate CW / CCW</span><strong>↑ / Z</strong></li>
+              <li><span>Pause</span><strong>P</strong></li>
+              <li><span>Restart</span><strong>Enter</strong></li>
+            </ul>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
