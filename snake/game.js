@@ -5,6 +5,7 @@ const STORAGE_KEYS = {
   highScore: "snake_arcade_high_score",
   settings: "snake_arcade_settings",
 };
+const HOME_URL = "../index.html";
 
 const DIFFICULTIES = {
   easy: { label: "Easy", interval: 250 },
@@ -233,13 +234,7 @@ function startGame() {
 }
 
 function backToMenu() {
-  state.mode = "menu";
-  state.deathFlash = null;
-  syncLayoutState();
-  setOverlay("menu");
-  updateHud();
-  playSound("confirm", 80);
-  draw();
+  window.location.href = HOME_URL;
 }
 
 function togglePause(forceMode) {
@@ -280,6 +275,7 @@ function endGame(collisionPoint) {
   setOverlay("gameOver");
   updateHud();
   playSound("gameOver", 100);
+  window.ArcadeHighScores?.promptAndSubmit("snake", state.score);
   if (state.hasNewHighScore) {
     setTimeout(() => playSound("highScore", 100), 180);
   }

@@ -553,6 +553,7 @@
     if (state.lives <= 0) {
       finalScore.textContent = Math.floor(state.score);
       setMode("gameover");
+      window.ArcadeHighScores?.promptAndSubmit("breaker", state.score);
       return;
     }
 
@@ -1235,12 +1236,16 @@
   }
 
   function bindEvents() {
+    const goHome = () => {
+      window.location.href = "../index.html";
+    };
+
     document.getElementById("startButton").addEventListener("click", onPressAction);
     document.getElementById("resumeButton").addEventListener("click", () => togglePause(false));
     document.getElementById("restartButton").addEventListener("click", startGame);
-    document.getElementById("menuButton").addEventListener("click", titleMode);
+    document.getElementById("menuButton").addEventListener("click", goHome);
     document.getElementById("playAgainButton").addEventListener("click", startGame);
-    document.getElementById("mainMenuButton").addEventListener("click", titleMode);
+    document.getElementById("mainMenuButton").addEventListener("click", goHome);
     document.getElementById("pauseButton").addEventListener("click", () => togglePause());
 
     window.addEventListener("keydown", (event) => {

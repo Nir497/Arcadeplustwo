@@ -532,6 +532,7 @@ class TronGame {
     this.ui.startButton.disabled = false;
     this.ui.startButton.classList.remove("is-hidden");
     this.playResultSound(headline === "DRAW!" ? "roundDraw" : "roundWin");
+    window.ArcadeHighScores?.promptAndSubmit("tron", Math.max(this.scores.p1, this.scores.p2));
     this.syncUi();
     this.render();
   }

@@ -559,3 +559,27 @@ input[type="range"] {
     min-height: 60px;
   }
 }
+.main-menu-link {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000;
+  border: 1px solid rgba(101, 234, 255, 0.8);
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  color: #65eaff;
+  background: rgba(3, 7, 10, 0.84);
+  box-shadow: 0 0 14px rgba(101, 234, 255, 0.32);
+  font-family: "Pixelify Sans", monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.main-menu-link:hover,
+.main-menu-link:focus-visible {
+  color: #050606;
+  background: #65eaff;
+  outline: none;
+}

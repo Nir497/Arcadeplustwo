@@ -620,6 +620,7 @@ function update(dt) {
         showOverlay("Game Over", "Press Space or Start to play again.");
         statusTextEl.textContent = "Game over.";
         bonusTextEl.textContent = "High score is preserved locally.";
+        window.ArcadeHighScores?.promptAndSubmit("pacman", state.score);
       } else {
         resetActors(true);
         showOverlay("Ready", "Press Space to continue.");

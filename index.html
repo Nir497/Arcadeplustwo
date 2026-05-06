@@ -16,56 +16,71 @@
     <main class="arcade-shell">
       <div class="crt-glow" aria-hidden="true"></div>
 
-      <header class="hero">
-        <p class="kicker">ARCADE+</p>
-        <h1>SELECT YOUR GAME</h1>
-      </header>
+      <section id="launcherView" class="launcher-view">
+        <header class="hero">
+          <p class="kicker">ARCADE+</p>
+          <h1>SELECT YOUR GAME</h1>
+        </header>
 
-      <section class="game-grid" aria-label="Game launcher">
-        <a class="game-card card-green" href="snake/index.html">
-          <img src="assets/images/snake.svg" alt="" class="game-icon" onerror="this.hidden=true" />
-          <span class="game-title">Snake</span>
-          <span class="game-copy">Eat. Grow. Survive.</span>
-        </a>
+        <section class="game-grid" aria-label="Game launcher">
+          <a class="game-card card-green" href="snake/index.html">
+            <img src="assets/images/snake.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+            <span class="game-title">Snake</span>
+            <span class="game-copy">Eat. Grow. Survive.</span>
+          </a>
 
-        <a class="game-card card-cyan" href="Pong/index.html">
-          <img src="assets/images/pong.svg" alt="" class="game-icon" onerror="this.hidden=true" />
-          <span class="game-title">Pong</span>
-          <span class="game-copy">2P or vs Bot</span>
-        </a>
+          <a class="game-card card-cyan" href="Pong/index.html">
+            <img src="assets/images/pong.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+            <span class="game-title">Pong</span>
+            <span class="game-copy">2P or vs Bot</span>
+          </a>
 
-        <a class="game-card card-pink" href="Breaker/index.html">
-          <img src="assets/images/breaker.svg" alt="" class="game-icon" onerror="this.hidden=true" />
-          <span class="game-title">Block Breaker</span>
-          <span class="game-copy">Smash all the blocks.</span>
-        </a>
+          <a class="game-card card-pink" href="Breaker/index.html">
+            <img src="assets/images/breaker.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+            <span class="game-title">Block Breaker</span>
+            <span class="game-copy">Smash all the blocks.</span>
+          </a>
 
-        <a class="game-card card-yellow" href="Space_invaders/index.html">
-          <img src="assets/images/space-invaders.svg" alt="" class="game-icon" onerror="this.hidden=true" />
-          <span class="game-title">Space Invaders</span>
-          <span class="game-copy">Defend Earth.</span>
-        </a>
+          <a class="game-card card-yellow" href="Space_invaders/index.html">
+            <img src="assets/images/space-invaders.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+            <span class="game-title">Space Invaders</span>
+            <span class="game-copy">Defend Earth.</span>
+          </a>
 
-        <a class="game-card card-orange" href="Pacman/index.html">
-          <img src="assets/images/pacman.svg" alt="" class="game-icon" onerror="this.hidden=true" />
-          <span class="game-title">Pacman</span>
-          <span class="game-copy">Chomp. Dodge. Score.</span>
-        </a>
+          <a class="game-card card-orange" href="Pacman/index.html">
+            <img src="assets/images/pacman.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+            <span class="game-title">Pacman</span>
+            <span class="game-copy">Chomp. Dodge. Score.</span>
+          </a>
 
-        <a class="game-card card-blue" href="Tetris/index.html">
-          <img src="assets/images/tetris.svg" alt="" class="game-icon" onerror="this.hidden=true" />
-          <span class="game-title">Tetris</span>
-          <span class="game-copy">Stack clean lines.</span>
-        </a>
+          <a class="game-card card-blue" href="Tetris/index.html">
+            <img src="assets/images/tetris.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+            <span class="game-title">Tetris</span>
+            <span class="game-copy">Stack clean lines.</span>
+          </a>
 
-        <a class="game-card card-red" href="Tron/index.html">
-          <img src="assets/images/tron.svg" alt="" class="game-icon" onerror="this.hidden=true" />
-          <span class="game-title">Tron</span>
-          <span class="game-copy">Race the grid.</span>
-        </a>
+          <a class="game-card card-red" href="Tron/index.html">
+            <img src="assets/images/tron.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+            <span class="game-title">Tron</span>
+            <span class="game-copy">Race the grid.</span>
+          </a>
+        </section>
+
+        <button class="high-scores-button" id="highScoresButton" type="button">High Scores</button>
+        <p class="coin-copy">INSERT COIN TO CONTINUE</p>
       </section>
 
-      <p class="coin-copy">INSERT COIN TO CONTINUE</p>
+      <section id="highScoresView" class="scores-view" hidden>
+        <header class="scores-header">
+          <h1>HIGH SCORES</h1>
+        </header>
+        <nav class="score-tabs" id="scoreTabs" aria-label="High score games"></nav>
+        <ol class="score-list" id="scoreList"></ol>
+        <p class="score-status" id="scoreStatus" aria-live="polite"></p>
+        <button class="back-button" id="backButton" type="button">← Back</button>
+      </section>
     </main>
+    <script src="assets/js/high-scores.js"></script>
+    <script src="assets/js/home.js"></script>
   </body>
 </html>

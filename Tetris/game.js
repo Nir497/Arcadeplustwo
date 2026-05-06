@@ -211,6 +211,7 @@ function spawnPiece(type = drawFromQueue()) {
     updateBestScore();
     sound.play("topOut");
     showOverlay("Top Out", "Game Over", "Press Enter to start a new run.");
+    window.ArcadeHighScores?.promptAndSubmit("tetris", state.score);
   }
 }
 

@@ -1208,6 +1208,7 @@ function enterGameOver() {
   audio.stopAllLoops();
   audio.play("gameOver");
   state.mode = "gameover";
+  window.ArcadeHighScores?.promptAndSubmit("space-invaders", state.score);
 }
 
 function handleShieldImpact(shot) {

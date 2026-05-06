@@ -270,6 +270,7 @@ function finishMatch(winnerSide) {
   setOverlay("gameover");
   sounds.playWin();
   announce(`${state.winner} wins the match.`);
+  window.ArcadeHighScores?.promptAndSubmit("pong", Math.max(state.scores.left, state.scores.right));
 }
 
 function scorePoint(side) {
