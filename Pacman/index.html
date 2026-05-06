@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pac-Man</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <p class="eyebrow">Arcade Reference Build</p>
+          <h1>Pac-Man</h1>
+          <p class="subhead">Classic maze rules with a retro-modern cabinet treatment.</p>
+        </div>
+        <div class="hud-panel">
+          <div class="hud-stat">
+            <span class="label">Score</span>
+            <strong id="score">0</strong>
+          </div>
+          <div class="hud-stat">
+            <span class="label">High</span>
+            <strong id="highScore">0</strong>
+          </div>
+          <div class="hud-stat">
+            <span class="label">Level</span>
+            <strong id="level">1</strong>
+          </div>
+          <div class="hud-stat lives-stat">
+            <span class="label">Lives</span>
+            <strong id="lives">3</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="game-layout">
+        <section class="cabinet">
+          <div class="cabinet-frame flash-layer" id="effectsFrame">
+            <div class="crt-shell shake-layer" id="shakeLayer">
+              <div class="crt-screen">
+                <canvas id="game" width="224" height="288" aria-label="Pac-Man game"></canvas>
+                <div class="scanlines" id="scanlines"></div>
+                <div class="vignette"></div>
+                <div class="overlay screen-message active" id="overlay">
+                  <div class="overlay-card">
+                    <p class="overlay-kicker">Ready</p>
+                    <h2 id="overlayTitle">Press Space to Start</h2>
+                    <p id="overlayText">Use arrow keys, WASD, or touch controls to move.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bottom-bar">
+            <div class="status-stack">
+              <p id="statusText">Collect every dot and avoid the ghosts.</p>
+              <p id="bonusText">Bonus fruit appears after 70 and 170 dots eaten.</p>
+            </div>
+            <div class="control-row">
+              <button id="startButton" class="arcade-button">Start</button>
+              <button id="scanlineButton" class="arcade-button arcade-button-secondary">Scanlines On</button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="info-panel">
+          <section class="panel-card">
+            <h3>Controls</h3>
+            <p>`Arrow Keys` / `WASD` move and queue turns at corners.</p>
+            <p>`Space` starts, resumes, and restarts after game over.</p>
+          </section>
+
+          <section class="panel-card">
+            <h3>Scoring</h3>
+            <p>Dots: 10</p>
+            <p>Power pellets: 50</p>
+            <p>Ghost chain: 200 / 400 / 800 / 1600</p>
+          </section>
+
+          <section class="panel-card">
+            <h3>Design Notes</h3>
+            <p>Pixelify Sans HUD, cabinet glow, scanlines, vignette, screen flash, shake, and responsive mobile controls.</p>
+          </section>
+        </aside>
+      </main>
+
+      <nav class="touch-controls" aria-label="Touch controls">
+        <button data-dir="up">▲</button>
+        <div class="touch-middle">
+          <button data-dir="left">◀</button>
+          <button data-dir="down">▼</button>
+          <button data-dir="right">▶</button>
+        </div>
+      </nav>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>

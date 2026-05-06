@@ -1,0 +1,74 @@
+[
+  {
+    "file": "start.wav",
+    "duration_seconds": 0.32,
+    "purpose": "Game start / unpause confirmation",
+    "format": "wav",
+    "sample_rate_hz": 44100,
+    "channels": 1
+  },
+  {
+    "file": "eat.wav",
+    "duration_seconds": 0.14,
+    "purpose": "Food pickup",
+    "format": "wav",
+    "sample_rate_hz": 44100,
+    "channels": 1
+  },
+  {
+    "file": "turn.wav",
+    "duration_seconds": 0.08,
+    "purpose": "Direction change",
+    "format": "wav",
+    "sample_rate_hz": 44100,
+    "channels": 1
+  },
+  {
+    "file": "pause.wav",
+    "duration_seconds": 0.18,
+    "purpose": "Pause toggle",
+    "format": "wav",
+    "sample_rate_hz": 44100,
+    "channels": 1
+  },
+  {
+    "file": "resume.wav",
+    "duration_seconds": 0.16,
+    "purpose": "Resume toggle",
+    "format": "wav",
+    "sample_rate_hz": 44100,
+    "channels": 1
+  },
+  {
+    "file": "game_over.wav",
+    "duration_seconds": 0.75,
+    "purpose": "Game over sting",
+    "format": "wav",
+    "sample_rate_hz": 44100,
+    "channels": 1
+  },
+  {
+    "file": "high_score.wav",
+    "duration_seconds": 0.6,
+    "purpose": "New high score celebration",
+    "format": "wav",
+    "sample_rate_hz": 44100,
+    "channels": 1
+  },
+  {
+    "file": "menu_move.wav",
+    "duration_seconds": 0.07,
+    "purpose": "Menu navigation / button hover",
+    "format": "wav",
+    "sample_rate_hz": 44100,
+    "channels": 1
+  },
+  {
+    "file": "confirm.wav",
+    "duration_seconds": 0.12,
+    "purpose": "Button press / positive confirm",
+    "format": "wav",
+    "sample_rate_hz": 44100,
+    "channels": 1
+  }
+]

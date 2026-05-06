@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Space Invaders icon">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <g filter="url(#glow)" shape-rendering="crispEdges">
+    <rect x="84" y="56" width="24" height="24" fill="#fff241"/>
+    <rect x="148" y="56" width="24" height="24" fill="#fff241"/>
+    <rect x="60" y="80" width="136" height="24" fill="#fff241"/>
+    <rect x="36" y="104" width="184" height="24" fill="#fff241"/>
+    <rect x="60" y="128" width="40" height="24" fill="#fff241"/>
+    <rect x="156" y="128" width="40" height="24" fill="#fff241"/>
+    <rect x="84" y="152" width="24" height="24" fill="#fff241"/>
+    <rect x="148" y="152" width="24" height="24" fill="#fff241"/>
+    <rect x="84" y="104" width="16" height="16" fill="#070807"/>
+    <rect x="156" y="104" width="16" height="16" fill="#070807"/>
+  </g>
+</svg>

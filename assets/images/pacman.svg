@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Pacman icon">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <g filter="url(#glow)" shape-rendering="crispEdges">
+    <path d="M128 40H88v16H72v16H56v40H40v32h16v40h16v16h16v16h40v-16h24v-16h16v-24h-40v-16h-16v-24h16v-16h40V72h-16V56h-24z" fill="#fff241"/>
+    <rect x="168" y="76" width="16" height="16" fill="#65eaff"/>
+    <rect x="204" y="112" width="16" height="16" fill="#ff3dff"/>
+    <rect x="168" y="148" width="16" height="16" fill="#ff9b2f"/>
+  </g>
+</svg>

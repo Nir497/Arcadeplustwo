@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arcade+</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="arcade-shell">
+      <div class="crt-glow" aria-hidden="true"></div>
+
+      <header class="hero">
+        <p class="kicker">ARCADE+</p>
+        <h1>SELECT YOUR GAME</h1>
+      </header>
+
+      <section class="game-grid" aria-label="Game launcher">
+        <a class="game-card card-green" href="snake/index.html">
+          <img src="assets/images/snake.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+          <span class="game-title">Snake</span>
+          <span class="game-copy">Eat. Grow. Survive.</span>
+        </a>
+
+        <a class="game-card card-cyan" href="Pong/index.html">
+          <img src="assets/images/pong.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+          <span class="game-title">Pong</span>
+          <span class="game-copy">2P or vs Bot</span>
+        </a>
+
+        <a class="game-card card-pink" href="Breaker/index.html">
+          <img src="assets/images/breaker.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+          <span class="game-title">Block Breaker</span>
+          <span class="game-copy">Smash all the blocks.</span>
+        </a>
+
+        <a class="game-card card-yellow" href="Space_invaders/index.html">
+          <img src="assets/images/space-invaders.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+          <span class="game-title">Space Invaders</span>
+          <span class="game-copy">Defend Earth.</span>
+        </a>
+
+        <a class="game-card card-orange" href="Pacman/index.html">
+          <img src="assets/images/pacman.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+          <span class="game-title">Pacman</span>
+          <span class="game-copy">Chomp. Dodge. Score.</span>
+        </a>
+
+        <a class="game-card card-blue" href="Tetris/index.html">
+          <img src="assets/images/tetris.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+          <span class="game-title">Tetris</span>
+          <span class="game-copy">Stack clean lines.</span>
+        </a>
+
+        <a class="game-card card-red" href="Tron/index.html">
+          <img src="assets/images/tron.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+          <span class="game-title">Tron</span>
+          <span class="game-copy">Race the grid.</span>
+        </a>
+      </section>
+
+      <p class="coin-copy">INSERT COIN TO CONTINUE</p>
+    </main>
+  </body>
+</html>

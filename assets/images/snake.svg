@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Snake icon">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <g filter="url(#glow)" shape-rendering="crispEdges">
+    <rect x="44" y="132" width="32" height="32" fill="#5dff5f"/>
+    <rect x="76" y="132" width="32" height="32" fill="#5dff5f"/>
+    <rect x="108" y="100" width="32" height="32" fill="#5dff5f"/>
+    <rect x="140" y="100" width="32" height="32" fill="#5dff5f"/>
+    <rect x="172" y="100" width="40" height="40" fill="#92ff64"/>
+    <rect x="196" y="108" width="8" height="8" fill="#07110a"/>
+    <rect x="28" y="60" width="24" height="24" fill="#ff3d3d"/>
+    <rect x="52" y="60" width="8" height="8" fill="#ffe94a"/>
+  </g>
+</svg>

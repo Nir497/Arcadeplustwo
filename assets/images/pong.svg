@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Pong icon">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <g filter="url(#glow)" shape-rendering="crispEdges">
+    <rect x="38" y="64" width="14" height="128" fill="#65eaff"/>
+    <rect x="204" y="64" width="14" height="128" fill="#65eaff"/>
+    <rect x="120" y="28" width="8" height="24" fill="#2a7a88"/>
+    <rect x="120" y="72" width="8" height="24" fill="#2a7a88"/>
+    <rect x="120" y="116" width="8" height="24" fill="#2a7a88"/>
+    <rect x="120" y="160" width="8" height="24" fill="#2a7a88"/>
+    <rect x="152" y="112" width="28" height="28" fill="#fff241"/>
+  </g>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Tetris icon">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <g filter="url(#glow)" shape-rendering="crispEdges">
+    <rect x="84" y="44" width="32" height="32" fill="#65eaff"/>
+    <rect x="116" y="44" width="32" height="32" fill="#65eaff"/>
+    <rect x="148" y="44" width="32" height="32" fill="#65eaff"/>
+    <rect x="116" y="76" width="32" height="32" fill="#65eaff"/>
+    <rect x="52" y="124" width="32" height="32" fill="#ff3dff"/>
+    <rect x="84" y="124" width="32" height="32" fill="#ff3dff"/>
+    <rect x="84" y="156" width="32" height="32" fill="#ff3dff"/>
+    <rect x="116" y="156" width="32" height="32" fill="#ff3dff"/>
+    <rect x="164" y="132" width="32" height="32" fill="#fff241"/>
+    <rect x="196" y="132" width="32" height="32" fill="#fff241"/>
+    <rect x="164" y="164" width="32" height="32" fill="#fff241"/>
+    <rect x="196" y="164" width="32" height="32" fill="#fff241"/>
+  </g>
+</svg>

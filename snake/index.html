@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake Arcade</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="ambient ambient-left"></div>
+      <div class="ambient ambient-right"></div>
+
+      <header class="topbar">
+        <div class="brand-block">
+          <p class="eyebrow">Retro Aesthetic Meets Modern Design</p>
+          <h1>SNAKE ARCADE</h1>
+        </div>
+
+        <button
+          class="icon-button"
+          id="settingsButton"
+          type="button"
+          aria-controls="settingsPanel"
+          aria-expanded="false"
+        >
+          <span class="gear" aria-hidden="true">⚙</span>
+          <span>Settings</span>
+        </button>
+      </header>
+
+      <main class="game-layout">
+        <section class="cabinet">
+          <div class="board-frame">
+            <div class="starfield" aria-hidden="true"></div>
+            <canvas
+              id="gameCanvas"
+              width="640"
+              height="640"
+              aria-label="Snake game board"
+            ></canvas>
+            <div class="crt-overlay" id="crtOverlay" aria-hidden="true"></div>
+
+            <aside class="hud-card">
+              <div class="hud-section">
+                <span class="hud-label">Current Score</span>
+                <strong id="scoreValue">0</strong>
+              </div>
+
+              <div class="hud-section">
+                <span class="hud-label">High Score</span>
+                <strong id="highScoreValue">0</strong>
+              </div>
+
+              <div class="hud-divider"></div>
+
+              <div class="hud-section">
+                <span class="hud-label">State</span>
+                <strong id="stateValue">Menu</strong>
+              </div>
+
+              <div class="hud-actions">
+                <button class="pixel-button secondary" id="pauseButton" type="button">
+                  Pause
+                </button>
+              </div>
+            </aside>
+
+            <section class="overlay-screen active" id="menuOverlay">
+              <div class="overlay-card">
+                <p class="overlay-kicker">Single-Player Arcade Challenge</p>
+                <h2>Guide the Snake. Avoid the Walls. Don’t Trap Yourself.</h2>
+                <p class="overlay-copy">
+                  Eat food to grow, score points, and survive the faster tick rate.
+                </p>
+                <div class="overlay-score">
+                  <span>High Score</span>
+                  <strong id="menuHighScoreValue">0</strong>
+                </div>
+                <div class="overlay-actions">
+                  <button class="pixel-button" id="menuStartButton" type="button">
+                    Start Game
+                  </button>
+                </div>
+                <p class="footer-hint">Press Enter to Start • Arrow Keys / WASD to Turn</p>
+              </div>
+            </section>
+
+            <section class="overlay-screen" id="pausedOverlay">
+              <div class="overlay-card compact">
+                <p class="overlay-kicker">Paused</p>
+                <h2>Board Frozen</h2>
+                <p class="overlay-copy">Press P or the pause button to resume.</p>
+              </div>
+            </section>
+
+            <section class="overlay-screen" id="gameOverOverlay">
+              <div class="overlay-card">
+                <p class="overlay-kicker warning">Game Over</p>
+                <h2>Collision Detected</h2>
+                <p class="overlay-copy">The run ends instantly when the snake hits a wall or itself.</p>
+                <div class="overlay-score">
+                  <span>Final Score</span>
+                  <strong id="finalScoreValue">0</strong>
+                </div>
+                <div class="overlay-score badge hidden" id="newHighScoreBadge">
+                  <span>New High Score!</span>
+                </div>
+                <div class="overlay-actions">
+                  <button class="pixel-button" id="restartButton" type="button">Restart</button>
+                  <button class="pixel-button secondary" id="mainMenuButton" type="button">
+                    Main Menu
+                  </button>
+                </div>
+                <p class="footer-hint">Press Enter or Space to Restart</p>
+              </div>
+            </section>
+
+            <section class="settings-panel" id="settingsPanel" hidden>
+              <div class="settings-row">
+                <label for="difficultySelect">Starting Speed</label>
+                <select id="difficultySelect">
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                  <option value="extreme">Extreme</option>
+                </select>
+              </div>
+              <div class="settings-row toggle-row">
+                <label for="crtToggle">CRT Overlay</label>
+                <input id="crtToggle" type="checkbox" checked />
+              </div>
+              <div class="settings-row">
+                <p class="settings-hint">
+                  Only the latest valid turn is applied each tick. Reverse input is ignored.
+                </p>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./game.js"></script>
+  </body>
+</html>

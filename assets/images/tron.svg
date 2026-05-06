@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Tron icon">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <g filter="url(#glow)" shape-rendering="crispEdges">
+    <rect x="44" y="116" width="104" height="16" fill="#3f8cff"/>
+    <rect x="132" y="84" width="16" height="48" fill="#3f8cff"/>
+    <rect x="132" y="84" width="60" height="16" fill="#3f8cff"/>
+    <rect x="32" y="104" width="28" height="40" fill="#65eaff"/>
+    <rect x="176" y="72" width="40" height="40" fill="#ff4a45"/>
+    <rect x="68" y="152" width="16" height="48" fill="#65eaff"/>
+    <rect x="84" y="184" width="112" height="16" fill="#65eaff"/>
+  </g>
+</svg>

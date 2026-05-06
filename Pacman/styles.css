@@ -1,0 +1,361 @@
+:root {
+  --bg-top: #050816;
+  --bg-bottom: #14031f;
+  --panel: rgba(17, 8, 38, 0.78);
+  --panel-border: rgba(0, 240, 255, 0.32);
+  --maze-blue: #2121de;
+  --pellet: #ffb897;
+  --pacman: #ffff00;
+  --cyan: #00f0ff;
+  --soft-white: #f0f0f0;
+  --danger: #fff000;
+  --cabinet-shadow: 0 30px 80px rgba(0, 0, 0, 0.58);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Pixelify Sans", sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(0, 240, 255, 0.12), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(255, 240, 0, 0.1), transparent 28%),
+    linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+  color: var(--soft-white);
+}
+
+.app-shell {
+  width: min(1200px, calc(100vw - 24px));
+  margin: 0 auto;
+  padding: 20px 0 28px;
+}
+
+.topbar,
+.game-layout {
+  display: grid;
+  gap: 18px;
+}
+
+.topbar {
+  grid-template-columns: 1.2fr 1fr;
+  align-items: start;
+  margin-bottom: 18px;
+}
+
+.brand-block,
+.hud-panel,
+.panel-card,
+.bottom-bar {
+  background: var(--panel);
+  border: 2px solid var(--panel-border);
+  border-radius: 18px;
+  box-shadow: var(--cabinet-shadow);
+  backdrop-filter: blur(18px);
+}
+
+.brand-block,
+.bottom-bar,
+.panel-card {
+  padding: 18px 20px;
+}
+
+.eyebrow,
+.subhead,
+.label,
+.status-stack p,
+.panel-card p {
+  margin: 0;
+}
+
+.eyebrow {
+  color: var(--cyan);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 700;
+}
+
+h1 {
+  font-size: clamp(2.8rem, 7vw, 5rem);
+  color: var(--danger);
+  text-shadow: 0 0 18px rgba(255, 240, 0, 0.32);
+}
+
+.subhead {
+  margin-top: 8px;
+  max-width: 38ch;
+  color: rgba(240, 240, 240, 0.8);
+  font-size: 1rem;
+}
+
+.hud-panel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px;
+}
+
+.hud-stat {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.26);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.label {
+  display: block;
+  color: rgba(240, 240, 240, 0.72);
+  font-size: 0.85rem;
+}
+
+.hud-stat strong {
+  display: block;
+  margin-top: 4px;
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+}
+
+.game-layout {
+  grid-template-columns: minmax(0, 1fr) 280px;
+}
+
+.cabinet {
+  display: grid;
+  gap: 16px;
+}
+
+.cabinet-frame {
+  position: relative;
+  padding: 20px;
+  border-radius: 28px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(22, 24, 39, 0.9), rgba(8, 9, 18, 0.96)),
+    linear-gradient(135deg, rgba(0, 240, 255, 0.16), rgba(255, 255, 0, 0.06));
+  box-shadow: var(--cabinet-shadow);
+}
+
+.crt-shell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  border-radius: 24px;
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 44%), #030308;
+  overflow: hidden;
+}
+
+.crt-screen {
+  position: relative;
+  width: min(100%, 672px);
+  aspect-ratio: 224 / 288;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #000;
+  box-shadow:
+    inset 0 0 50px rgba(255, 255, 255, 0.06),
+    0 0 40px rgba(0, 240, 255, 0.16);
+}
+
+#game {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  transform: scale(1.005, 0.995);
+}
+
+.scanlines,
+.vignette,
+.overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.scanlines {
+  pointer-events: none;
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+  background-size: 100% 3px;
+  mix-blend-mode: multiply;
+  opacity: 0.65;
+}
+
+.scanlines.hidden {
+  opacity: 0;
+}
+
+.vignette {
+  pointer-events: none;
+  background: radial-gradient(circle, transparent 52%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+.overlay {
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.overlay.active {
+  opacity: 1;
+}
+
+.overlay-card {
+  padding: 18px 22px;
+  text-align: center;
+  border-radius: 16px;
+  background: rgba(5, 8, 22, 0.82);
+  border: 2px solid rgba(0, 240, 255, 0.36);
+  box-shadow: 0 0 24px rgba(0, 240, 255, 0.18);
+}
+
+.overlay-kicker {
+  margin: 0 0 8px;
+  color: var(--cyan);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.status-stack {
+  display: grid;
+  gap: 4px;
+}
+
+#statusText {
+  color: var(--soft-white);
+}
+
+#bonusText {
+  color: rgba(0, 240, 255, 0.84);
+}
+
+.control-row {
+  display: flex;
+  gap: 10px;
+}
+
+.arcade-button,
+.touch-controls button {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font: inherit;
+  color: #03101a;
+  cursor: pointer;
+  background: linear-gradient(180deg, #fff46b, #ffcf27);
+  box-shadow: 0 0 16px rgba(255, 240, 0, 0.18);
+}
+
+.arcade-button-secondary {
+  background: linear-gradient(180deg, #7af7ff, #09c0e5);
+}
+
+.info-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.panel-card h3 {
+  margin-bottom: 8px;
+  color: var(--cyan);
+  font-size: 1.3rem;
+}
+
+.panel-card p + p {
+  margin-top: 8px;
+}
+
+.touch-controls {
+  display: none;
+  margin-top: 18px;
+  justify-content: center;
+  gap: 10px;
+}
+
+.touch-controls > button,
+.touch-middle {
+  display: flex;
+  gap: 10px;
+}
+
+.touch-controls button {
+  min-width: 68px;
+  min-height: 68px;
+  font-size: 1.4rem;
+}
+
+.flash-layer.flash {
+  animation: flash 0.12s linear;
+}
+
+.shake-layer.shake {
+  animation: shake 0.1s linear;
+}
+
+@keyframes flash {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.55) saturate(1.15); }
+  100% { filter: brightness(1); }
+}
+
+@keyframes shake {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(2px, -1px); }
+  50% { transform: translate(-2px, 1px); }
+  75% { transform: translate(1px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+@media (max-width: 960px) {
+  .topbar,
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hud-panel {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100vw - 12px, 560px);
+    padding-top: 12px;
+  }
+
+  .bottom-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .control-row {
+    width: 100%;
+  }
+
+  .control-row .arcade-button {
+    flex: 1;
+  }
+
+  .touch-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}

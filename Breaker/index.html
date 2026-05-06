@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Block Breaker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+  <main class="app-shell">
+    <header class="hud" id="hud">
+      <div class="hud-block lives-block">
+        <div class="hud-label">Lives</div>
+        <div class="lives-icons" id="livesIcons"></div>
+      </div>
+      <div class="hud-block score-block">
+        <div class="hud-label">Score</div>
+        <div class="hud-value score-value" id="scoreValue">0</div>
+      </div>
+      <div class="hud-block level-block">
+        <div class="hud-label">Level</div>
+        <div class="hud-value" id="levelValue">1</div>
+        <div class="power-badge hidden" id="powerBadge"></div>
+      </div>
+    </header>
+
+    <section class="playframe">
+      <canvas id="gameCanvas" width="1200" height="800" aria-label="Block Breaker game"></canvas>
+      <button class="pause-button" id="pauseButton" type="button">II</button>
+      <div class="touch-hint" id="touchHint">Drag to move · Tap to launch / fire</div>
+
+      <div class="overlay title-overlay" id="titleOverlay">
+        <div class="overlay-card">
+          <p class="eyebrow">Arcade / Puzzle</p>
+          <h1>Block Breaker</h1>
+          <p class="subtitle">Precision, power-ups, and escalating brick patterns.</p>
+          <button class="primary-button" id="startButton" type="button">Press Start</button>
+          <p class="help-line">Arrow keys or mouse on desktop. Touch drag and tap on mobile.</p>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="pauseOverlay">
+        <div class="overlay-card small">
+          <h2>Paused</h2>
+          <div class="button-row">
+            <button class="primary-button" id="resumeButton" type="button">Resume</button>
+            <button class="ghost-button" id="restartButton" type="button">Restart</button>
+            <button class="ghost-button" id="menuButton" type="button">Quit</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="bannerOverlay">
+        <div class="overlay-card banner-card">
+          <h2 id="bannerTitle">Level Clear</h2>
+          <p class="banner-score" id="bannerScore">+0</p>
+          <p id="bannerDetail">Next level loading...</p>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="gameOverOverlay">
+        <div class="overlay-card">
+          <h2 class="danger">Game Over</h2>
+          <p class="final-score-label">Final Score</p>
+          <p class="final-score" id="finalScore">0</p>
+          <div class="button-row">
+            <button class="primary-button" id="playAgainButton" type="button">Play Again</button>
+            <button class="ghost-button" id="mainMenuButton" type="button">Main Menu</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>

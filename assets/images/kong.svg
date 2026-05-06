@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Kong icon">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <g filter="url(#glow)" shape-rendering="crispEdges">
+    <rect x="88" y="48" width="80" height="48" fill="#ff9b2f"/>
+    <rect x="72" y="88" width="112" height="72" fill="#ff9b2f"/>
+    <rect x="48" y="112" width="32" height="72" fill="#b95e22"/>
+    <rect x="176" y="112" width="32" height="72" fill="#b95e22"/>
+    <rect x="84" y="160" width="32" height="48" fill="#b95e22"/>
+    <rect x="140" y="160" width="32" height="48" fill="#b95e22"/>
+    <rect x="104" y="68" width="16" height="16" fill="#111"/>
+    <rect x="136" y="68" width="16" height="16" fill="#111"/>
+    <rect x="108" y="104" width="40" height="16" fill="#ffe0a3"/>
+  </g>
+</svg>
