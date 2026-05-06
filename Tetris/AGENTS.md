@@ -52,6 +52,8 @@ This repo currently has no commit history, so use clear imperative commit messag
 - `Add line clear sound effects`
 - `Fix hidden-row spawn bug`
 
+When a user asks for code or asset changes, commit and push all relevant files after completing and validating every requested task.
+
 Pull requests should include:
 
 - a short summary of user-visible changes

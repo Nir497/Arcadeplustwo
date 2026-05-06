@@ -127,7 +127,7 @@ function createInitialState() {
     active: null,
     queue: [],
     score: 0,
-    level: 0,
+    level: 1,
     lines: 0,
     bestScore: Number(localStorage.getItem("tetris-best-score") || 0),
     dropAccumulator: 0,
@@ -256,10 +256,6 @@ function attachEvents() {
         event.preventDefault();
         pressHorizontal("right");
         break;
-      case "ArrowDown":
-        event.preventDefault();
-        state.gravityOverride = true;
-        break;
       case "ArrowUp":
       case "KeyX":
         event.preventDefault();
@@ -275,6 +271,7 @@ function attachEvents() {
         break;
       case "Space":
         event.preventDefault();
+        state.gravityOverride = true;
         break;
       default:
         break;
@@ -289,7 +286,7 @@ function attachEvents() {
       case "ArrowRight":
         releaseHorizontal("right");
         break;
-      case "ArrowDown":
+      case "Space":
         state.gravityOverride = false;
         break;
       default:
@@ -443,9 +440,9 @@ function lockPiece() {
 
   const cleared = clearLines();
   if (cleared > 0) {
-    state.score += SCORE_BY_LINES[cleared] * (state.level + 1);
+    state.score += SCORE_BY_LINES[cleared] * state.level;
     state.lines += cleared;
-    state.level = Math.floor(state.lines / 10);
+    state.level = Math.floor(state.lines / 10) + 1;
   }
 
   state.score = Math.min(state.score, 999999);
@@ -501,7 +498,7 @@ function getGravityInterval() {
     5, 5, 5, 4, 4, 4, 3, 3, 3, 2,
     2, 2, 2, 2, 2, 2, 2, 2, 2, 1,
   ];
-  const index = Math.min(state.level, framesPerRow.length - 1);
+  const index = Math.min(state.level - 1, framesPerRow.length - 1);
   return (framesPerRow[index] / 60) * 1000;
 }
 
