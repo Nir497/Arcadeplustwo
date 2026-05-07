@@ -54,7 +54,10 @@
 
   function promptAndSubmit(gameId, score) {
     const numericScore = Math.max(0, Math.floor(Number(score) || 0));
-    const playerName = window.prompt(`Game over. Enter your name for the ${numericScore} point high score:`, "");
+    const playerName = window.prompt(
+      `Game over. High scores are still in development. Enter your name for the ${numericScore} point high score:`,
+      ""
+    );
 
     if (playerName === null) {
       return null;

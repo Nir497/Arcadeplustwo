@@ -306,10 +306,14 @@ body::after {
 }
 
 .high-scores-button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.28rem;
   margin-top: clamp(2.2rem, 5vw, 3.8rem);
   border: 2px solid var(--cyan);
   border-radius: 12px;
-  padding: 0.8rem 2rem;
+  padding: 0.72rem 2rem 0.62rem;
   color: var(--cyan);
   background: rgba(7, 10, 10, 0.82);
   box-shadow:
@@ -321,6 +325,14 @@ body::after {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
+}
+
+.button-development-tag {
+  color: var(--yellow);
+  font-size: 0.7rem;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 8px rgba(255, 242, 65, 0.72);
 }
 
 .high-scores-button:hover,
@@ -345,6 +357,24 @@ body::after {
     0 0 8px currentColor,
     0 0 24px rgba(101, 234, 255, 0.88),
     0 0 44px rgba(101, 234, 255, 0.54);
+}
+
+.scores-development-note {
+  display: inline-block;
+  margin: 1rem 0 0;
+  padding: 0.32rem 0.7rem;
+  border: 2px solid var(--yellow);
+  border-radius: 4px;
+  color: var(--yellow);
+  background: rgba(5, 6, 6, 0.86);
+  box-shadow:
+    0 0 8px rgba(255, 242, 65, 0.66),
+    inset 0 0 10px rgba(255, 242, 65, 0.12);
+  font-size: clamp(0.9rem, 1.7vw, 1.15rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
 .score-tabs {
