@@ -184,6 +184,53 @@ body::after {
   transform: translateX(70%);
 }
 
+.game-card-disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  filter: saturate(0.72);
+}
+
+.game-card-disabled:hover,
+.game-card-disabled:focus-visible {
+  transform: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 34%),
+    var(--panel);
+  box-shadow:
+    0 0 4px var(--card-color),
+    0 0 14px rgba(255, 255, 255, 0.14),
+    0 0 24px color-mix(in srgb, var(--card-color) 56%, transparent),
+    inset 0 0 22px color-mix(in srgb, var(--card-color) 10%, transparent);
+}
+
+.game-card-disabled:hover::before,
+.game-card-disabled:focus-visible::before {
+  opacity: 0;
+  transform: translateX(-70%);
+}
+
+.development-badge {
+  position: absolute;
+  top: 0.85rem;
+  left: 50%;
+  z-index: 2;
+  width: max-content;
+  max-width: calc(100% - 1.4rem);
+  padding: 0.3rem 0.55rem;
+  border: 2px solid currentColor;
+  background: rgba(5, 6, 6, 0.92);
+  box-shadow:
+    0 0 8px currentColor,
+    inset 0 0 10px color-mix(in srgb, var(--card-color) 18%, transparent);
+  color: var(--yellow);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+  transform: translateX(-50%) rotate(-2deg);
+}
+
 .game-icon {
   position: relative;
   z-index: 1;
