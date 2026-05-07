@@ -39,6 +39,8 @@ When adding tests later, place them in a top-level `tests/` directory and mirror
 ## Commit & Pull Request Guidelines
 Current history is minimal (`initial commit (lots of work done beffore)`), so use short, imperative commit messages going forward, for example: `Fix keyboard paddle lock` or `Add bundled sound effects`.
 
+When asked to commit and push, stage only files relevant to the requested change. Do not include unrelated local edits, generated noise such as `.DS_Store`, or neighboring project changes unless the user explicitly asks for them.
+
 Pull requests should include:
 
 - A short summary of user-visible changes.

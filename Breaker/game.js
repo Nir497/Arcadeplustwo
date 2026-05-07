@@ -11,7 +11,9 @@
   const GRID_Y = 120;
   const GRID_ROWS_MAX = 8;
   const EXIT_ANGLE_CAP = Math.PI * 0.4;
-  const MIN_VERTICAL_RATIO = 0.32;
+  const MIN_VERTICAL_RATIO = 0.38;
+  const SURGE_INTERVAL = 11;
+  const SURGE_DURATION = 3.4;
 
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
@@ -61,12 +63,16 @@
     bricks: [],
     balls: [],
     capsules: [],
+    hazards: [],
     lasers: [],
     particles: [],
     popups: [],
     paddlesPulse: 0,
     flashAlpha: 0,
     warningAlpha: 0,
+    dangerPulse: 0,
+    surgeTimer: SURGE_INTERVAL,
+    surgeRemaining: 0,
     transitionTimer: 0,
     lastTime: 0,
     pointerX: WIDTH / 2,
@@ -90,10 +96,10 @@
   const paddle = {
     x: WIDTH / 2,
     y: PADDLE_Y,
-    width: 80,
+    width: 70,
     height: 12,
-    speed: 480,
-    baseWidth: 80,
+    speed: 530,
+    baseWidth: 70,
     laserShots: 0,
   };
 
@@ -173,11 +179,11 @@
   }
 
   function baseBallSpeed(level) {
-    if (level === 1) return 270;
-    if (level <= 3) return 300;
-    if (level <= 5) return 348;
-    if (level <= 8) return 390;
-    return 450;
+    if (level === 1) return 340;
+    if (level <= 3) return 380;
+    if (level <= 5) return 425;
+    if (level <= 8) return 470;
+    return 520;
   }
 
   function createBall(x, y, vx, vy, isPrimary = false) {
@@ -212,6 +218,7 @@
     state.score = 0;
     state.lives = 3;
     state.capsules = [];
+    state.hazards = [];
     state.lasers = [];
     state.particles = [];
     state.popups = [];
@@ -223,6 +230,9 @@
     state.rowClearBoosts = 0;
     state.bossShieldTimer = 5;
     state.bossShieldPulse = 0;
+    state.dangerPulse = 0;
+    state.surgeTimer = SURGE_INTERVAL;
+    state.surgeRemaining = 0;
     state.controlMode = "mouse";
     loadLevel(1);
     resetBallOnPaddle();
@@ -238,10 +248,10 @@
   }
 
   function levelRows(level) {
-    if (level === 1) return 3;
-    if (level === 2) return 4;
-    if (level <= 5) return 5;
-    if (level <= 8) return 6;
+    if (level === 1) return 4;
+    if (level === 2) return 5;
+    if (level <= 5) return 6;
+    if (level <= 8) return 7;
     if (level === 9) return 7;
     return 7 + (level % 2);
   }
@@ -254,6 +264,7 @@
       reinforced: { hp: 2, score: 25, color: shade(rowColors[row % rowColors.length], -0.28) },
       armored: { hp: 3, score: 50, color: "#8b8b8b" },
       explosive: { hp: 1, score: 20, color: "#ff8800" },
+      hazard: { hp: 1, score: 18, color: "#ff145f" },
       indestructible: { hp: Infinity, score: 0, color: "#6f7689" },
       host: { hp: 1, score: 10, color: rowColors[row % rowColors.length] },
       moving: { hp: 1, score: 12, color: rowColors[row % rowColors.length] },
@@ -294,17 +305,35 @@
       for (let col = 0; col < GRID_COLS; col += 1) {
         let type = "standard";
 
+        if (level === 1 && row === 1 && (col === 3 || col === 10)) {
+          type = "host";
+        }
+        if (level === 1 && row === 2 && (col === 5 || col === 8)) {
+          type = "hazard";
+        }
         if (level === 2 && (col === 2 || col === 6 || col === 10) && row % 2 === 0) {
           type = "host";
         }
+        if (level === 2 && row === 3 && (col === 4 || col === 9)) {
+          type = "explosive";
+        }
+        if (level === 2 && row === 1 && (col === 1 || col === 12)) {
+          type = "moving";
+        }
         if (level === 3 && (row >= 1 && row <= 3) && col > 2 && col < 11) {
           type = row === 2 ? "host" : "reinforced";
+        }
+        if (level === 3 && row === 4 && col % 4 === 1) {
+          type = "hazard";
         }
         if (level === 4 && (row + col) % 2 === 0) {
           type = "indestructible";
         }
         if (level === 5 && row === 2 && (col === 4 || col === 9)) {
           type = "explosive";
+        }
+        if (level >= 5 && level < 9 && row === rows - 2 && col % 5 === 2) {
+          type = "hazard";
         }
         if (level === 5 && row === 1 && (col === 3 || col === 10)) {
           type = "host";
@@ -338,9 +367,10 @@
           else if (roll === 3) type = "explosive";
           else if (roll === 4 && row % 2 === 0) type = "moving";
           else if (roll === 5 && row === rows - 1 && col % 3 === 0) type = "indestructible";
+          else if (roll === 6) type = "hazard";
         }
 
-        if ((level === 1 || level === 2) && row === rows - 1 && col % 2 === 1) {
+        if (level === 1 && row === rows - 1 && col % 4 === 1) {
           continue;
         }
         if (level === 4 && row === 2 && (col === 6 || col === 7)) {
@@ -361,6 +391,7 @@
     state.level = level;
     state.bricks = buildPattern(level, levelRows(level));
     state.capsules = [];
+    state.hazards = [];
     state.lasers = [];
     state.particles = [];
     state.popups = [];
@@ -370,6 +401,9 @@
     state.rowClearBoosts = 0;
     state.bossShieldTimer = 5;
     state.bossShieldPulse = 0;
+    state.dangerPulse = 0;
+    state.surgeTimer = Math.max(5, SURGE_INTERVAL - level * 0.35);
+    state.surgeRemaining = 0;
     paddle.width = paddle.baseWidth;
     paddle.laserShots = 0;
     showBanner(`Level ${level}`, `L${level}`, level === 9 ? "Boss stage" : "Prepare to launch", 1200);
@@ -393,11 +427,14 @@
   }
 
   function effectiveBallSpeed() {
-    let speed = baseBallSpeed(state.level) + state.rowClearBoosts * 10;
-    if (state.activePowerups.slow?.active) {
-      speed *= 0.7;
+    let speed = baseBallSpeed(state.level) + state.rowClearBoosts * 16;
+    if (state.surgeRemaining > 0) {
+      speed *= 1.2;
     }
-    return Math.min(speed, 520);
+    if (state.activePowerups.slow?.active) {
+      speed *= 0.82;
+    }
+    return Math.min(speed, 660);
   }
 
   function addScore(points, x, y) {
@@ -426,6 +463,10 @@
 
     if (brick.type === "host" && brick.hostPower) {
       spawnCapsule(brick, brick.hostPower);
+    }
+
+    if (brick.type === "hazard") {
+      spawnHazards(brick);
     }
 
     if (brick.type === "explosive") {
@@ -480,6 +521,23 @@
       label: power.label,
       color: power.color,
     });
+  }
+
+  function spawnHazards(brick) {
+    const count = state.level >= 5 ? 3 : 2;
+    for (let i = 0; i < count; i += 1) {
+      state.hazards.push({
+        x: brick.x + brick.w / 2 + rand(-brick.w * 0.35, brick.w * 0.35),
+        y: brick.y + state.brickFallOffset + brick.h / 2,
+        radius: rand(7, 10),
+        vx: rand(-75, 75),
+        vy: rand(165, 235) + state.level * 8,
+        spin: rand(-6, 6),
+        rotation: Math.random() * Math.PI * 2,
+      });
+    }
+    state.warningAlpha = Math.max(state.warningAlpha, 0.12);
+    state.dangerPulse = 1;
   }
 
   function activatePowerup(powerId) {
@@ -563,6 +621,7 @@
 
   function clearTransientObjects() {
     state.capsules = [];
+    state.hazards = [];
     state.lasers = [];
     for (const key of Object.keys(state.activePowerups)) {
       if (key !== "score") {
@@ -597,12 +656,15 @@
     state.warningAlpha = Math.max(0, state.warningAlpha - dt);
     state.flashAlpha = Math.max(0, state.flashAlpha - dt * 1.8);
     state.paddlesPulse = Math.max(0, state.paddlesPulse - dt * 8);
+    state.dangerPulse = Math.max(0, state.dangerPulse - dt * 2.5);
 
     updatePaddle(dt);
     updatePowerups(dt);
+    updateSurge(dt);
     updateMovingBricks(dt);
     updateDescendingBricks(dt);
     updateCapsules(dt);
+    updateHazards(dt);
     updateLasers(dt);
     updateBalls(dt);
     updateParticles(dt);
@@ -640,6 +702,26 @@
     updateHud();
   }
 
+  function updateSurge(dt) {
+    if (state.mode !== "playing") return;
+    if (state.surgeRemaining > 0) {
+      state.surgeRemaining -= dt;
+      state.warningAlpha = Math.max(state.warningAlpha, 0.04);
+      state.dangerPulse = Math.max(state.dangerPulse, 0.18);
+      if (state.surgeRemaining <= 0) {
+        state.surgeTimer = Math.max(5, SURGE_INTERVAL - state.level * 0.45);
+      }
+      return;
+    }
+
+    state.surgeTimer -= dt;
+    if (state.surgeTimer <= 0) {
+      state.surgeRemaining = SURGE_DURATION + Math.min(state.level, 8) * 0.15;
+      state.flashAlpha = 0.12;
+      showBanner("Speed Surge", "20%", "Ball velocity unstable", 900);
+    }
+  }
+
   function updatePaddle(dt) {
     const speed = paddle.speed * dt;
     if (state.touchActive || state.controlMode === "mouse") {
@@ -659,7 +741,6 @@
   }
 
   function updateMovingBricks(dt) {
-    if (state.level < 7) return;
     for (const brick of state.bricks) {
       if (!brick.alive || brick.type !== "moving") continue;
       brick.x += brick.movingDir * brick.movingSpeed * dt;
@@ -673,8 +754,8 @@
   }
 
   function updateDescendingBricks(dt) {
-    if (state.level !== 8 && state.level <= 9) return;
-    const rate = state.level === 8 ? 8 : state.level > 9 ? 10 : 0;
+    if (state.level < 4 && state.level <= 9) return;
+    const rate = state.level >= 4 && state.level <= 7 ? 3 + state.level : state.level === 8 ? 11 : state.level > 9 ? 13 : 0;
     if (!rate) return;
     const destroyedCount = state.bricks.filter((brick) => !brick.alive && brick.type !== "indestructible").length;
     const total = state.bricks.filter((brick) => brick.type !== "indestructible").length || 1;
@@ -703,6 +784,34 @@
       }
       return capsule.y < HEIGHT + 30;
     });
+  }
+
+  function updateHazards(dt) {
+    let hitPaddle = false;
+    state.hazards = state.hazards.filter((hazard) => {
+      hazard.x += hazard.vx * dt;
+      hazard.y += hazard.vy * dt;
+      hazard.rotation += hazard.spin * dt;
+      hazard.vy += 90 * dt;
+      if (hazard.x - hazard.radius <= 0 || hazard.x + hazard.radius >= WIDTH) {
+        hazard.vx *= -0.75;
+        hazard.x = clamp(hazard.x, hazard.radius, WIDTH - hazard.radius);
+      }
+      const hit =
+        hazard.x + hazard.radius >= paddle.x - paddle.width / 2 &&
+        hazard.x - hazard.radius <= paddle.x + paddle.width / 2 &&
+        hazard.y + hazard.radius >= paddle.y &&
+        hazard.y - hazard.radius <= paddle.y + paddle.height;
+      if (hit) {
+        hitPaddle = true;
+        return false;
+      }
+      return hazard.y < HEIGHT + 40;
+    });
+
+    if (hitPaddle) {
+      loseLife();
+    }
   }
 
   function updateLasers(dt) {
@@ -955,6 +1064,7 @@
     drawBackground();
     drawBricks();
     drawCapsules();
+    drawHazards();
     drawLasers();
     drawPaddle();
     drawBalls();
@@ -976,6 +1086,17 @@
       ctx.moveTo(0, y);
       ctx.lineTo(WIDTH, y);
       ctx.stroke();
+    }
+
+    if (state.surgeRemaining > 0) {
+      ctx.strokeStyle = "rgba(255, 20, 95, 0.24)";
+      ctx.lineWidth = 2;
+      for (let x = -HEIGHT; x < WIDTH; x += 80) {
+        ctx.beginPath();
+        ctx.moveTo(x, HEIGHT);
+        ctx.lineTo(x + HEIGHT, 0);
+        ctx.stroke();
+      }
     }
   }
 
@@ -1040,6 +1161,9 @@
       if (brick.type === "explosive") {
         ctx.shadowColor = "rgba(255, 166, 0, 0.7)";
         ctx.shadowBlur = 20;
+      } else if (brick.type === "hazard") {
+        ctx.shadowColor = "rgba(255,20,95,0.8)";
+        ctx.shadowBlur = 18;
       } else if (brick.type === "host") {
         ctx.shadowColor = "rgba(255,255,255,0.45)";
         ctx.shadowBlur = 8;
@@ -1066,6 +1190,14 @@
         ctx.lineTo(brick.x + 30, y + 14);
         ctx.lineTo(brick.x + 40, y + 7);
         ctx.stroke();
+      }
+
+      if (brick.type === "hazard") {
+        ctx.fillStyle = "#110816";
+        ctx.font = '700 14px "Pixelify Sans"';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("!", brick.x + brick.w / 2, y + brick.h / 2 + 1);
       }
 
       if (brick.type === "armored" || brick.type === "boss") {
@@ -1120,6 +1252,27 @@
     ctx.shadowBlur = 0;
   }
 
+  function drawHazards() {
+    for (const hazard of state.hazards) {
+      ctx.save();
+      ctx.translate(hazard.x, hazard.y);
+      ctx.rotate(hazard.rotation);
+      ctx.shadowColor = "rgba(255, 20, 95, 0.75)";
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = "#ff145f";
+      ctx.beginPath();
+      ctx.moveTo(0, -hazard.radius);
+      ctx.lineTo(hazard.radius * 0.9, hazard.radius * 0.75);
+      ctx.lineTo(-hazard.radius * 0.9, hazard.radius * 0.75);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
   function drawParticles() {
     for (const particle of state.particles) {
       ctx.globalAlpha = particle.life / 0.4;
@@ -1149,6 +1302,11 @@
     if (state.flashAlpha > 0) {
       ctx.fillStyle = `rgba(255, 255, 255, ${state.flashAlpha})`;
       ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    }
+    if (state.dangerPulse > 0) {
+      ctx.strokeStyle = `rgba(255, 20, 95, ${0.2 + state.dangerPulse * 0.35})`;
+      ctx.lineWidth = 8;
+      ctx.strokeRect(4, 4, WIDTH - 8, HEIGHT - 8);
     }
   }
 
