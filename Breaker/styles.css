@@ -155,6 +155,20 @@ canvas {
   border-radius: 22px;
 }
 
+#bannerOverlay {
+  inset: 12px auto auto 12px;
+  width: min(290px, calc(100% - 24px));
+  display: block;
+  background: transparent;
+  border-radius: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+#bannerOverlay.hidden {
+  display: none;
+}
+
 .overlay.hidden,
 .power-badge.hidden,
 .touch-hint.hidden {
@@ -302,7 +316,35 @@ canvas {
 }
 
 .banner-card {
-  width: min(92%, 440px);
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+  border-color: rgba(255, 0, 255, 0.45);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(16, 22, 42, 0.94), rgba(7, 10, 22, 0.94));
+  box-shadow:
+    0 0 18px rgba(255, 0, 255, 0.18),
+    0 0 18px rgba(0, 255, 255, 0.12);
+}
+
+.banner-card h2 {
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--cyan);
+}
+
+.banner-card .banner-score {
+  margin-top: 6px;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.banner-card p:not(.banner-score) {
+  margin-top: 5px;
+  font-size: 0.75rem;
+  line-height: 1.15;
+  opacity: 0.82;
 }
 
 @keyframes scan {

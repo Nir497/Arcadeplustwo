@@ -406,7 +406,12 @@
     state.surgeRemaining = 0;
     paddle.width = paddle.baseWidth;
     paddle.laserShots = 0;
-    showBanner(`Level ${level}`, `L${level}`, level === 9 ? "Boss stage" : "Prepare to launch", 1200);
+    const levelDetail = level === 1
+      ? "Warning bricks drop shards"
+      : level === 9
+        ? "Boss stage"
+        : "Prepare to launch";
+    showBanner(`Level ${level}`, `L${level}`, levelDetail, 1200);
     updateHud();
   }
 
@@ -605,6 +610,9 @@
   function loseLife() {
     state.lives -= 1;
     state.warningAlpha = 0.3;
+    state.surgeRemaining = 0;
+    state.surgeTimer = Math.max(5, SURGE_INTERVAL - state.level * 0.35);
+    clearBanner();
     playSound("lose");
     updateHud();
     clearTransientObjects();
@@ -660,13 +668,24 @@
 
     updatePaddle(dt);
     updatePowerups(dt);
+
+    if (state.mode === "ready") {
+      updateBalls(dt);
+      updateParticles(dt);
+      updatePopups(dt);
+      return;
+    }
+
     updateSurge(dt);
     updateMovingBricks(dt);
     updateDescendingBricks(dt);
+    if (state.mode !== "playing") return;
     updateCapsules(dt);
     updateHazards(dt);
+    if (state.mode !== "playing") return;
     updateLasers(dt);
     updateBalls(dt);
+    if (state.mode !== "playing") return;
     updateParticles(dt);
     updatePopups(dt);
 
@@ -1193,8 +1212,26 @@
       }
 
       if (brick.type === "hazard") {
-        ctx.fillStyle = "#110816";
-        ctx.font = '700 14px "Pixelify Sans"';
+        ctx.save();
+        ctx.beginPath();
+        roundRect(brick.x, y, brick.w, brick.h, 6);
+        ctx.clip();
+        ctx.strokeStyle = "rgba(12, 8, 18, 0.75)";
+        ctx.lineWidth = 5;
+        for (let stripe = -brick.h; stripe < brick.w + brick.h; stripe += 14) {
+          ctx.beginPath();
+          ctx.moveTo(brick.x + stripe, y + brick.h);
+          ctx.lineTo(brick.x + stripe + brick.h, y);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.fillStyle = "#ffe45e";
+        ctx.beginPath();
+        ctx.arc(brick.x + brick.w / 2, y + brick.h / 2, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#170915";
+        ctx.font = '700 13px "Pixelify Sans"';
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText("!", brick.x + brick.w / 2, y + brick.h / 2 + 1);
@@ -1259,16 +1296,21 @@
       ctx.rotate(hazard.rotation);
       ctx.shadowColor = "rgba(255, 20, 95, 0.75)";
       ctx.shadowBlur = 12;
-      ctx.fillStyle = "#ff145f";
+      ctx.fillStyle = "#ffe45e";
       ctx.beginPath();
       ctx.moveTo(0, -hazard.radius);
       ctx.lineTo(hazard.radius * 0.9, hazard.radius * 0.75);
       ctx.lineTo(-hazard.radius * 0.9, hazard.radius * 0.75);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#ff145f";
+      ctx.lineWidth = 3;
       ctx.stroke();
+      ctx.fillStyle = "#170915";
+      ctx.font = '700 11px "Pixelify Sans"';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("!", 0, hazard.radius * 0.12);
       ctx.restore();
     }
   }
