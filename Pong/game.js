@@ -50,6 +50,7 @@ const state = {
   mode: "idle",
   playMode: "pvp",
   winner: null,
+  submittedScore: false,
   lastConceded: "right",
   collisionFlashUntil: 0,
   scorePulseUntil: {
@@ -212,9 +213,14 @@ function hideOverlay() {
 }
 
 function startMatch() {
+  if (state.mode === "gameover") {
+    submitGameOverScore();
+  }
+
   sounds.unlock();
   state.mode = "running";
   state.winner = null;
+  state.submittedScore = false;
   state.lastConceded = "right";
   state.scores.left = 0;
   state.scores.right = 0;
@@ -270,7 +276,16 @@ function finishMatch(winnerSide) {
   setOverlay("gameover");
   sounds.playWin();
   announce(`${state.winner} wins the match.`);
-  window.ArcadeHighScores?.promptAndSubmit("pong", Math.max(state.scores.left, state.scores.right));
+}
+
+function submitGameOverScore() {
+  if (state.submittedScore) {
+    return;
+  }
+
+  state.submittedScore = Boolean(
+    window.ArcadeHighScores?.promptAndSubmit("pong", Math.max(state.scores.left, state.scores.right))
+  );
 }
 
 function scorePoint(side) {

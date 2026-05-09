@@ -59,6 +59,7 @@
     mode: "title",
     level: 1,
     score: 0,
+    submittedScore: false,
     lives: 3,
     bricks: [],
     balls: [],
@@ -214,8 +215,13 @@
   }
 
   function startGame() {
+    if (state.mode === "gameover") {
+      submitGameOverScore();
+    }
+
     state.level = 1;
     state.score = 0;
+    state.submittedScore = false;
     state.lives = 3;
     state.capsules = [];
     state.hazards = [];
@@ -619,7 +625,6 @@
     if (state.lives <= 0) {
       finalScore.textContent = Math.floor(state.score);
       setMode("gameover");
-      window.ArcadeHighScores?.promptAndSubmit("breaker", state.score);
       return;
     }
 
@@ -1435,8 +1440,17 @@
     oscillator.stop(now + duration);
   }
 
+  function submitGameOverScore() {
+    if (state.mode !== "gameover" || state.submittedScore) {
+      return;
+    }
+
+    state.submittedScore = Boolean(window.ArcadeHighScores?.promptAndSubmit("breaker", state.score));
+  }
+
   function bindEvents() {
     const goHome = () => {
+      submitGameOverScore();
       window.location.href = "../index.html";
     };
 

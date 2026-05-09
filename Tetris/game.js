@@ -133,6 +133,7 @@ function createInitialState() {
     dropAccumulator: 0,
     gravityOverride: false,
     gameOver: false,
+    submittedScore: false,
     paused: true,
     started: false,
     spawnDelay: 0,
@@ -165,6 +166,7 @@ function resetGame() {
 
 function startGame() {
   if (state.gameOver) {
+    submitGameOverScore();
     resetGame();
   }
 
@@ -211,8 +213,15 @@ function spawnPiece(type = drawFromQueue()) {
     updateBestScore();
     sound.play("topOut");
     showOverlay("Top Out", "Game Over", "Press Enter to start a new run.");
-    window.ArcadeHighScores?.promptAndSubmit("tetris", state.score);
   }
+}
+
+function submitGameOverScore() {
+  if (state.submittedScore) {
+    return;
+  }
+
+  state.submittedScore = Boolean(window.ArcadeHighScores?.promptAndSubmit("tetris", state.score));
 }
 
 function drawFromQueue() {

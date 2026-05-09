@@ -12,20 +12,24 @@ const launcherView = document.getElementById("launcherView");
 const highScoresView = document.getElementById("highScoresView");
 const highScoresButton = document.getElementById("highScoresButton");
 const backButton = document.getElementById("backButton");
+const scoresBackdrop = document.getElementById("scoresBackdrop");
 const tabs = document.getElementById("scoreTabs");
 const scoreList = document.getElementById("scoreList");
 const scoreStatus = document.getElementById("scoreStatus");
 
 let activeGame = GAMES[0].id;
 
-function setView(view) {
-  const showingScores = view === "scores";
-  launcherView.hidden = showingScores;
-  highScoresView.hidden = !showingScores;
+function openScores() {
+  highScoresView.hidden = false;
+  document.body.classList.add("modal-open");
+  loadScores(activeGame);
+  backButton.focus();
+}
 
-  if (showingScores) {
-    loadScores(activeGame);
-  }
+function closeScores() {
+  highScoresView.hidden = true;
+  document.body.classList.remove("modal-open");
+  highScoresButton.focus();
 }
 
 function renderTabs() {
@@ -67,8 +71,15 @@ function escapeHtml(value) {
 
 renderTabs();
 
-highScoresButton.addEventListener("click", () => setView("scores"));
-backButton.addEventListener("click", () => setView("launcher"));
+highScoresButton.addEventListener("click", openScores);
+backButton.addEventListener("click", closeScores);
+scoresBackdrop.addEventListener("click", closeScores);
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !highScoresView.hidden) {
+    closeScores();
+  }
+});
 
 tabs.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-game]");

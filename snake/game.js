@@ -56,6 +56,7 @@ const state = {
   tickInterval: DIFFICULTIES.easy.interval,
   lastTickAt: 0,
   hasNewHighScore: false,
+  submittedScore: false,
   runStartingHighScore: 0,
   deathFlash: null,
   settings: loadSettings(),
@@ -214,6 +215,10 @@ function randomEmptyCell() {
 }
 
 function startGame() {
+  if (state.mode === "gameOver") {
+    submitGameOverScore();
+  }
+
   state.mode = "playing";
   state.snake = initialSnake();
   state.food = randomEmptyCell();
@@ -221,6 +226,7 @@ function startGame() {
   state.queuedDirection = null;
   state.score = 0;
   state.hasNewHighScore = false;
+  state.submittedScore = false;
   state.runStartingHighScore = state.highScore;
   state.deathFlash = null;
   state.speedKey = state.settings.difficulty;
@@ -234,7 +240,19 @@ function startGame() {
 }
 
 function backToMenu() {
+  if (state.mode === "gameOver") {
+    submitGameOverScore();
+  }
+
   window.location.href = HOME_URL;
+}
+
+function submitGameOverScore() {
+  if (state.submittedScore) {
+    return;
+  }
+
+  state.submittedScore = Boolean(window.ArcadeHighScores?.promptAndSubmit("snake", state.score));
 }
 
 function togglePause(forceMode) {
@@ -275,7 +293,6 @@ function endGame(collisionPoint) {
   setOverlay("gameOver");
   updateHud();
   playSound("gameOver", 100);
-  window.ArcadeHighScores?.promptAndSubmit("snake", state.score);
   if (state.hasNewHighScore) {
     setTimeout(() => playSound("highScore", 100), 180);
   }

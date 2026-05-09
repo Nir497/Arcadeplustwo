@@ -105,6 +105,7 @@ const state = {
   started: false,
   paused: true,
   gameOver: false,
+  submittedScore: false,
   score: 0,
   level: 1,
   lives: 3,
@@ -620,7 +621,6 @@ function update(dt) {
         showOverlay("Game Over", "Press Space or Start to play again.");
         statusTextEl.textContent = "Game over.";
         bonusTextEl.textContent = "High score is preserved locally.";
-        window.ArcadeHighScores?.promptAndSubmit("pacman", state.score);
       } else {
         resetActors(true);
         showOverlay("Ready", "Press Space to continue.");
@@ -741,6 +741,7 @@ function shakeScreen() {
 
 function startGame() {
   if (state.gameOver) {
+    submitGameOverScore();
     resetGame();
   }
   state.started = true;
@@ -758,6 +759,7 @@ function resetGame() {
   state.started = false;
   state.paused = true;
   state.gameOver = false;
+  state.submittedScore = false;
   state.score = 0;
   state.level = 1;
   state.lives = 3;
@@ -773,6 +775,14 @@ function resetGame() {
   showOverlay("Press Space to Start", "Use arrow keys, WASD, or touch controls to move.");
   statusTextEl.textContent = "Collect every dot and avoid the ghosts.";
   bonusTextEl.textContent = "Bonus fruit appears after 70 and 170 dots eaten.";
+}
+
+function submitGameOverScore() {
+  if (state.submittedScore) {
+    return;
+  }
+
+  state.submittedScore = Boolean(window.ArcadeHighScores?.promptAndSubmit("pacman", state.score));
 }
 
 function drawBoard() {

@@ -106,6 +106,7 @@ class TronGame {
     this.useColorblindPalette = false;
     this.reducedMotion = false;
     this.scores = { p1: 0, p2: 0 };
+    this.submittedScore = false;
     this.pendingTimeouts = new Set();
     this.modeResolver = null;
     this.difficultyResolver = null;
@@ -126,6 +127,9 @@ class TronGame {
     this.ui.startButton.addEventListener("click", () => {
       this.unlockAudio();
       this.playSound("menuSelect");
+      if (this.state === "GAME_OVER") {
+        this.submitGameOverScore();
+      }
       void this.startRound();
     });
     this.ui.overlayActions.addEventListener("click", (event) => {
@@ -262,6 +266,7 @@ class TronGame {
     this.markCell(this.players.p1.x, this.players.p1.y, 1);
     this.markCell(this.players.p2.x, this.players.p2.y, 2);
     this.state = "SETUP";
+    this.submittedScore = false;
     this.elapsedMs = 0;
     this.players.p1.pendingDirection = null;
     this.players.p2.pendingDirection = null;
@@ -532,9 +537,18 @@ class TronGame {
     this.ui.startButton.disabled = false;
     this.ui.startButton.classList.remove("is-hidden");
     this.playResultSound(headline === "DRAW!" ? "roundDraw" : "roundWin");
-    window.ArcadeHighScores?.promptAndSubmit("tron", Math.max(this.scores.p1, this.scores.p2));
     this.syncUi();
     this.render();
+  }
+
+  submitGameOverScore() {
+    if (this.submittedScore) {
+      return;
+    }
+
+    this.submittedScore = Boolean(
+      window.ArcadeHighScores?.promptAndSubmit("tron", Math.max(this.scores.p1, this.scores.p2))
+    );
   }
 
   handleKeyDown(event) {

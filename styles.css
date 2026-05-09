@@ -33,6 +33,10 @@ body {
     linear-gradient(180deg, #090a0a 0%, #040505 52%, #020303 100%);
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 body::before,
 body::after {
   position: fixed;
@@ -342,9 +346,44 @@ body::after {
   outline: none;
 }
 
+.scores-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2.5rem);
+}
+
+.scores-modal[hidden] {
+  display: none;
+}
+
+.scores-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(101, 234, 255, 0.14), transparent 28rem),
+    rgba(0, 0, 0, 0.76);
+  backdrop-filter: blur(7px);
+}
+
 .scores-view {
-  width: min(100%, 40rem);
-  padding-top: clamp(0.5rem, 3vw, 1.5rem);
+  position: relative;
+  z-index: 1;
+  width: min(100%, 44rem);
+  max-height: min(88vh, 48rem);
+  overflow-y: auto;
+  border: 2px solid rgba(101, 234, 255, 0.78);
+  border-radius: 22px;
+  padding: clamp(1.4rem, 4vw, 2.4rem);
+  background:
+    linear-gradient(180deg, rgba(101, 234, 255, 0.08), transparent 34%),
+    rgba(5, 6, 6, 0.96);
+  box-shadow:
+    0 0 12px rgba(101, 234, 255, 0.82),
+    0 0 46px rgba(101, 234, 255, 0.34),
+    inset 0 0 28px rgba(101, 234, 255, 0.1);
   text-align: center;
 }
 
@@ -382,7 +421,7 @@ body::after {
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.9rem 1.25rem;
-  margin: clamp(2.1rem, 4vw, 3rem) 0 2rem;
+  margin: clamp(1.5rem, 3vw, 2.3rem) 0 1.5rem;
 }
 
 .score-tab {
@@ -493,7 +532,7 @@ body::after {
 }
 
 .back-button {
-  margin-top: clamp(2rem, 5vw, 3.5rem);
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
   border: 0;
   color: rgba(101, 234, 255, 0.68);
   background: transparent;

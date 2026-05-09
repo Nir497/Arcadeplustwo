@@ -172,6 +172,7 @@ function createInitialState() {
     mode: "title",
     frame: 0,
     score: 0,
+    submittedScore: false,
     highScore: 0,
     lives: 3,
     level: 1,
@@ -1208,7 +1209,14 @@ function enterGameOver() {
   audio.stopAllLoops();
   audio.play("gameOver");
   state.mode = "gameover";
-  window.ArcadeHighScores?.promptAndSubmit("space-invaders", state.score);
+}
+
+function submitGameOverScore() {
+  if (state.submittedScore) {
+    return;
+  }
+
+  state.submittedScore = Boolean(window.ArcadeHighScores?.promptAndSubmit("space-invaders", state.score));
 }
 
 function handleShieldImpact(shot) {
@@ -1801,6 +1809,7 @@ window.addEventListener("keydown", (event) => {
         startCountdown();
       }
     } else if (state.mode === "gameover") {
+      submitGameOverScore();
       resetGame("countdown");
       state.countdownValue = 3;
       state.countdownTimer = 60;

@@ -74,15 +74,25 @@
         <p class="coin-copy">INSERT COIN TO CONTINUE</p>
       </section>
 
-      <section id="highScoresView" class="scores-view" hidden>
-        <header class="scores-header">
-          <h1>HIGH SCORES</h1>
-          <p class="scores-development-note">Still in development</p>
-        </header>
-        <nav class="score-tabs" id="scoreTabs" aria-label="High score games"></nav>
-        <ol class="score-list" id="scoreList"></ol>
-        <p class="score-status" id="scoreStatus" aria-live="polite"></p>
-        <button class="back-button" id="backButton" type="button">← Back</button>
+      <section
+        id="highScoresView"
+        class="scores-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="scoresTitle"
+        hidden
+      >
+        <div class="scores-backdrop" id="scoresBackdrop"></div>
+        <div class="scores-view">
+          <header class="scores-header">
+            <h1 id="scoresTitle">HIGH SCORES</h1>
+            <p class="scores-development-note">Still in development</p>
+          </header>
+          <nav class="score-tabs" id="scoreTabs" aria-label="High score games"></nav>
+          <ol class="score-list" id="scoreList"></ol>
+          <p class="score-status" id="scoreStatus" aria-live="polite"></p>
+          <button class="back-button" id="backButton" type="button">← Back</button>
+        </div>
       </section>
     </main>
     <script src="assets/js/high-scores.js"></script>
