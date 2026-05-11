@@ -16,7 +16,7 @@
     <main class="arcade-shell">
       <div class="crt-glow" aria-hidden="true"></div>
 
-      <section id="launcherView" class="launcher-view">
+      <section id="launcherView" class="launcher-view" data-launcher-view="home">
         <header class="hero">
           <p class="kicker">ARCADE+</p>
           <h1>SELECT YOUR GAME</h1>
@@ -60,11 +60,11 @@
             <span class="game-copy">Stack clean lines.</span>
           </a>
 
-          <a class="game-card card-red" href="Tron/index.html">
+          <button class="game-card card-red" id="tronFolderButton" type="button">
             <img src="assets/images/tron.svg" alt="" class="game-icon" onerror="this.hidden=true" />
             <span class="game-title">Tron</span>
-            <span class="game-copy">Race the grid.</span>
-          </a>
+            <span class="game-copy">Open the grid folder.</span>
+          </button>
         </section>
 
         <button class="high-scores-button" id="highScoresButton" type="button">
@@ -72,6 +72,29 @@
           <span class="button-development-tag">In development</span>
         </button>
         <p class="coin-copy">INSERT COIN TO CONTINUE</p>
+      </section>
+
+      <section id="tronView" class="launcher-view tron-view" data-launcher-view="tron" hidden>
+        <header class="hero">
+          <p class="kicker">TRON</p>
+          <h1>SELECT YOUR GRID</h1>
+        </header>
+
+        <section class="game-grid tron-grid" aria-label="Tron game launcher">
+          <a class="game-card card-red" href="Tron/index.html">
+            <img src="assets/images/tron.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+            <span class="game-title">Classic Tron</span>
+            <span class="game-copy">Tight arena. Shared camera.</span>
+          </a>
+
+          <a class="game-card card-cyan" href="Tron%202.0%20-%20Big%20Screen/index.html">
+            <img src="assets/images/tron.svg" alt="" class="game-icon" onerror="this.hidden=true" />
+            <span class="game-title">Tron 2.0</span>
+            <span class="game-copy">Large board. Each player has their own camera.</span>
+          </a>
+        </section>
+
+        <a class="back-button launcher-back-button" id="tronBackButton" href="./">← Back</a>
       </section>
 
       <section

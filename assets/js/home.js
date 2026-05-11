@@ -9,6 +9,9 @@ const GAMES = [
 ];
 
 const launcherView = document.getElementById("launcherView");
+const tronView = document.getElementById("tronView");
+const tronFolderButton = document.getElementById("tronFolderButton");
+const tronBackButton = document.getElementById("tronBackButton");
 const highScoresView = document.getElementById("highScoresView");
 const highScoresButton = document.getElementById("highScoresButton");
 const backButton = document.getElementById("backButton");
@@ -18,6 +21,23 @@ const scoreList = document.getElementById("scoreList");
 const scoreStatus = document.getElementById("scoreStatus");
 
 let activeGame = GAMES[0].id;
+
+function showLauncherView(view) {
+  const showingTron = view === "tron";
+  launcherView.hidden = showingTron;
+  tronView.hidden = !showingTron;
+}
+
+function openTronFolder() {
+  showLauncherView("tron");
+  tronBackButton.focus();
+}
+
+function closeTronFolder(event) {
+  event?.preventDefault();
+  showLauncherView("home");
+  tronFolderButton.focus();
+}
 
 function openScores() {
   highScoresView.hidden = false;
@@ -71,6 +91,8 @@ function escapeHtml(value) {
 
 renderTabs();
 
+tronFolderButton.addEventListener("click", openTronFolder);
+tronBackButton.addEventListener("click", closeTronFolder);
 highScoresButton.addEventListener("click", openScores);
 backButton.addEventListener("click", closeScores);
 scoresBackdrop.addEventListener("click", closeScores);

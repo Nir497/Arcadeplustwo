@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TRON Light Cycles 2.o</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="main-menu-link" href="../index.html">Main Menu</a>
+    <div class="app-shell">
+      <main class="compact-layout">
+        <section class="arena-panel">
+          <div class="arena-frame">
+            <canvas
+              id="gameCanvas"
+              width="1200"
+              height="960"
+              aria-label="Split-screen TRON Light Cycles arena with separate player perspectives"
+              role="img"
+            ></canvas>
+            <div id="overlay" class="overlay" aria-live="polite">
+              <div id="overlayContent" class="overlay-card">
+                <h1 id="screenTitle" class="screen-title">TRON <span>LIGHT CYCLES 2.o</span></h1>
+                <p id="overlayHeadline" class="overlay-headline">PRESS START</p>
+                <p id="overlaySubline" class="overlay-subline">
+                  WASD VS ARROW KEYS
+                </p>
+                <p id="overlayBody" class="overlay-body"></p>
+                <div id="overlayVisual" class="overlay-visual"></div>
+                <button id="startButton" class="start-button" type="button">START</button>
+                <div id="overlayActions" class="overlay-actions"></div>
+              </div>
+              <button id="setupSkipButton" class="small-button setup-skip-button is-hidden" type="button">
+                SKIP
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="../assets/js/high-scores.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

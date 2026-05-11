@@ -78,6 +78,10 @@ body::after {
   align-items: center;
 }
 
+.launcher-view[hidden] {
+  display: none;
+}
+
 .crt-glow {
   position: fixed;
   inset: auto 10% -8rem;
@@ -148,10 +152,15 @@ body::after {
   text-align: center;
   text-decoration: none;
   text-transform: uppercase;
+  font: inherit;
   transition:
     transform 180ms ease,
     box-shadow 180ms ease,
     background 180ms ease;
+}
+
+button.game-card {
+  cursor: pointer;
 }
 
 .game-card::before {
@@ -307,6 +316,15 @@ body::after {
   letter-spacing: 0.07em;
   text-align: center;
   text-shadow: 0 0 12px rgba(255, 242, 65, 0.34);
+}
+
+.tron-grid {
+  width: min(100%, 36rem);
+  grid-template-columns: repeat(2, minmax(10.5rem, 1fr));
+}
+
+.launcher-back-button {
+  margin-top: clamp(2rem, 5vw, 3.5rem);
 }
 
 .high-scores-button {
@@ -565,6 +583,10 @@ body::after {
   .game-grid {
     grid-template-columns: 1fr;
     margin-top: 2.5rem;
+  }
+
+  .tron-grid {
+    grid-template-columns: 1fr;
   }
 
   .game-card {
