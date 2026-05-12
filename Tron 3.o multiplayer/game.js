@@ -4,10 +4,15 @@ const CONFIG = {
   cellSize: 14,
   defaultTickMs: 80,
   resolveMs: 2200,
+  botSpaceSampleLimit: 900,
   countdownSteps: ["3", "2", "1", "GO!"],
   startPositions: {
-    p1: { x: 45, y: 72, direction: "right" },
-    p2: { x: 135, y: 72, direction: "left" },
+    p1: { x: 36, y: 72, direction: "right" },
+    p2: { x: 144, y: 72, direction: "left" },
+    p3: { x: 90, y: 24, direction: "down" },
+    bot1: { x: 90, y: 120, direction: "up" },
+    bot2: { x: 36, y: 24, direction: "right" },
+    bot3: { x: 144, y: 120, direction: "left" },
   },
   colors: {
     default: {
@@ -15,15 +20,44 @@ const CONFIG = {
       p1Trail: "#006688",
       p2Head: "#FF9900",
       p2Trail: "#884400",
+      p3Head: "#FF3CF7",
+      p3Trail: "#721A77",
+      bot1Head: "#00FF66",
+      bot1Trail: "#006B2B",
+      bot2Head: "#FFE14D",
+      bot2Trail: "#776600",
+      bot3Head: "#A86BFF",
+      bot3Trail: "#452477",
     },
     colorblind: {
       p1Head: "#33A1FF",
       p1Trail: "#1F4D7A",
       p2Head: "#FFD84D",
       p2Trail: "#7D6300",
+      p3Head: "#E66A5C",
+      p3Trail: "#713229",
+      bot1Head: "#64D97B",
+      bot1Trail: "#2E6A39",
+      bot2Head: "#F4A261",
+      bot2Trail: "#7A4F2F",
+      bot3Head: "#B09CFF",
+      bot3Trail: "#554C7A",
     },
   },
 };
+
+const RIDER_DEFINITIONS = [
+  { id: "p1", label: "Player 1", shortLabel: "P1", kind: "human", colorKey: "p1", trailValue: 1, controls: "WASD" },
+  { id: "p2", label: "Player 2", shortLabel: "P2", kind: "human", colorKey: "p2", trailValue: 2, controls: "ARROWS" },
+  { id: "p3", label: "Player 3", shortLabel: "P3", kind: "human", colorKey: "p3", trailValue: 3, controls: "IJKL" },
+  { id: "bot1", label: "Bot 1", shortLabel: "B1", kind: "bot", colorKey: "bot1", trailValue: 4, controls: "BOT" },
+  { id: "bot2", label: "Bot 2", shortLabel: "B2", kind: "bot", colorKey: "bot2", trailValue: 5, controls: "BOT" },
+  { id: "bot3", label: "Bot 3", shortLabel: "B3", kind: "bot", colorKey: "bot3", trailValue: 6, controls: "BOT" },
+];
+
+const TRAIL_COLOR_KEYS = Object.fromEntries(
+  RIDER_DEFINITIONS.map((definition) => [definition.trailValue, `${definition.colorKey}Trail`]),
+);
 
 const DIRECTIONS = {
   up: { x: 0, y: -1, opposite: "down" },
@@ -41,6 +75,10 @@ const KEYMAP = {
   ArrowLeft: { player: "p2", direction: "left" },
   ArrowDown: { player: "p2", direction: "down" },
   ArrowRight: { player: "p2", direction: "right" },
+  KeyI: { player: "p3", direction: "up" },
+  KeyJ: { player: "p3", direction: "left" },
+  KeyK: { player: "p3", direction: "down" },
+  KeyL: { player: "p3", direction: "right" },
 };
 
 const SINGLE_PLAYER_ARROW_MAP = {
@@ -105,10 +143,12 @@ class TronGame {
     this.elapsedMs = 0;
     this.tickMs = CONFIG.defaultTickMs;
     this.mode = "human";
+    this.humanCount = 1;
+    this.botCount = 1;
     this.botDifficulty = "easy";
     this.useColorblindPalette = false;
     this.reducedMotion = false;
-    this.scores = { p1: 0, p2: 0 };
+    this.scores = {};
     this.submittedScore = false;
     this.pendingTimeouts = new Set();
     this.modeResolver = null;
@@ -147,7 +187,7 @@ class TronGame {
     this.ui.setupSkipButton?.addEventListener("click", () => {
       this.unlockAudio();
       this.playSound("menuSelect");
-      this.resolveInteraction("mode", "skip");
+      void this.startQuickSetup();
     });
     this.ui.speedSlider?.addEventListener("input", (event) => this.setTickRate(Number(event.target.value)));
     this.ui.paletteToggle?.addEventListener("click", () => this.togglePalette());
@@ -241,15 +281,13 @@ class TronGame {
     this.state = "IDLE";
     this.elapsedMs = 0;
     this.grid = this.createGrid();
-    this.players = {
-      p1: this.makePlayer("p1", CONFIG.startPositions.p1),
-      p2: this.makePlayer("p2", CONFIG.startPositions.p2),
-    };
+    this.players = this.createPlayers();
 
-    this.markCell(this.players.p1.x, this.players.p1.y, 1);
-    this.markCell(this.players.p2.x, this.players.p2.y, 2);
+    for (const player of this.getPlayers()) {
+      this.markCell(player.x, player.y, player.trailValue);
+    }
 
-    this.ui.startButton.textContent = this.round === 1 && this.scores.p1 === 0 && this.scores.p2 === 0 ? "START" : "RESTART";
+    this.ui.startButton.textContent = this.round === 1 && this.getHighScore() === 0 ? "START" : "RESTART";
     this.ui.startButton.disabled = false;
     this.ui.startButton.classList.remove("is-hidden");
     this.ui.setupSkipButton?.classList.add("is-hidden");
@@ -258,15 +296,45 @@ class TronGame {
     }
     this.setControlsLayout(false);
     this.setStatus("Press START");
-    this.showOverlay("PRESS START", "WASD VS ARROW KEYS", true, "neutral");
+    this.showOverlay("PRESS START", "1-3 HUMANS + 0-3 BOTS", true, "neutral");
     this.resetPanels();
     this.updateSelectionSummary();
     this.syncUi();
   }
 
-  makePlayer(id, start) {
+  createPlayers() {
+    const activeDefinitions = this.getActiveRiderDefinitions();
+    return Object.fromEntries(activeDefinitions.map((definition) => [
+      definition.id,
+      this.makePlayer(definition, CONFIG.startPositions[definition.id]),
+    ]));
+  }
+
+  getActiveRiderDefinitions() {
+    const humans = RIDER_DEFINITIONS.filter((definition) => definition.kind === "human").slice(0, this.humanCount);
+    const bots = RIDER_DEFINITIONS.filter((definition) => definition.kind === "bot").slice(0, this.botCount);
+    return [...humans, ...bots];
+  }
+
+  getPlayers() {
+    return Object.values(this.players);
+  }
+
+  getAlivePlayers() {
+    return this.getPlayers().filter((player) => player.alive);
+  }
+
+  getHumanPlayers() {
+    return this.getPlayers().filter((player) => player.kind === "human");
+  }
+
+  getBotPlayers() {
+    return this.getPlayers().filter((player) => player.kind === "bot");
+  }
+
+  makePlayer(definition, start) {
     return {
-      id,
+      ...definition,
       x: start.x,
       y: start.y,
       direction: start.direction,
@@ -283,17 +351,16 @@ class TronGame {
 
     this.clearTimers();
     this.grid = this.createGrid();
-    this.players = {
-      p1: this.makePlayer("p1", CONFIG.startPositions.p1),
-      p2: this.makePlayer("p2", CONFIG.startPositions.p2),
-    };
-    this.markCell(this.players.p1.x, this.players.p1.y, 1);
-    this.markCell(this.players.p2.x, this.players.p2.y, 2);
+    this.players = this.createPlayers();
+    for (const player of this.getPlayers()) {
+      this.markCell(player.x, player.y, player.trailValue);
+    }
     this.state = "SETUP";
     this.submittedScore = false;
     this.elapsedMs = 0;
-    this.players.p1.pendingDirection = null;
-    this.players.p2.pendingDirection = null;
+    for (const player of this.getPlayers()) {
+      player.pendingDirection = null;
+    }
     this.ui.startButton.disabled = true;
     this.ui.startButton.classList.add("is-hidden");
     this.ui.setupSkipButton?.classList.remove("is-hidden");
@@ -302,73 +369,45 @@ class TronGame {
     this.setStatus("Initializing rider link...");
 
     const token = ++this.setupToken;
-    const introText = "SECOND RIDER LINK REQUIRED. SELECT HUMAN OR BOT TO CONFIGURE PLAYER 2.";
-    this.showOverlay("LINK SETUP", "PHASE 01", true, "neutral");
+    const introText = "SELECT 1-3 HUMAN RIDERS AND 0-3 BOTS. BOTS ARE FULL COMPETITORS, BUT ONLY HUMAN RIDERS GET CAMERA PANES.";
+    this.showOverlay("MATCH SETUP", "CONFIGURE RIDERS", true, "neutral");
     this.clearOverlayStage();
     if (!(await this.typeText(this.ui.overlayBody, introText, token))) {
       return;
     }
 
-    this.renderOverlayActions("mode");
-    const mode = await this.waitForModeSelection(token);
-    if (!mode) {
+    this.renderOverlayActions("setup");
+    this.setStatus("Configure riders, then press NEXT.");
+    const setupConfirmed = await this.waitForNext(token);
+    if (!setupConfirmed) {
       return;
     }
 
-    if (mode === "skip") {
-      this.showOverlay("QUICK SETUP", "CONFIGURE ROUND", true, "neutral");
-      this.clearOverlayStage();
-      this.setControlsLayout(false);
-      this.ui.overlayBody.textContent = "SET PLAYER 2 MODE, PICK BOT DIFFICULTY IF NEEDED, THEN PRESS NEXT TO START THE COUNTDOWN.";
-      this.renderOverlayActions("setup");
-      this.setStatus("Configure the round, then press NEXT.");
-      const quickSetupConfirmed = await this.waitForNext(token);
-      if (!quickSetupConfirmed) {
-        return;
-      }
-      this.clearOverlayStage();
-      this.ui.setupSkipButton?.classList.add("is-hidden");
-      this.setStatus("Get ready...");
-      this.runCountdown();
-      return;
-    } else {
-      if (mode === "bot") {
-        this.showOverlay("LINK SETUP", "PHASE 02", true, "neutral");
-        this.clearOverlayStage();
-        if (!(await this.typeText(this.ui.overlayBody, "BOT LINK CONFIRMED. SELECT A ROUTINE FOR PLAYER 2.", token))) {
-          return;
-        }
-        this.renderOverlayActions("difficulty");
-        const difficulty = await this.waitForDifficultySelection(token);
-        if (!difficulty) {
-          return;
-        }
-      }
-
-      this.showOverlay("CONTROL MAP", "PHASE 03", true, "neutral");
-      this.clearOverlayStage();
-      this.setControlsLayout(true);
-      const controlsText = this.mode === "bot"
-        ? `PLAYER 1 USES WASD OR ARROW KEYS. PLAYER 2 IS ${this.botDifficulty.toUpperCase()} BOT CONTROL. EACH SIDE SHOWS THAT RIDER'S LOCAL CAMERA ON THE SAME MASSIVE GRID.`
-        : "PLAYER 1 USES WASD. PLAYER 2 USES ARROW KEYS. EACH SIDE SHOWS THAT RIDER'S LOCAL CAMERA ON THE SAME MASSIVE GRID.";
-      if (!(await this.typeText(this.ui.overlayBody, controlsText, token))) {
-        return;
-      }
-      this.ui.overlayVisual.innerHTML = this.getControlsVisualMarkup();
-      this.renderOverlayActions("next");
-      this.setStatus("Review the controls, then press NEXT.");
-      const controlsConfirmed = await this.waitForNext(token);
-      if (!controlsConfirmed) {
-        return;
-      }
+    this.grid = this.createGrid();
+    this.players = this.createPlayers();
+    for (const player of this.getPlayers()) {
+      this.markCell(player.x, player.y, player.trailValue);
     }
 
-    this.showOverlay("ROUND BRIEFING", "PHASE 04", true, "neutral");
+    this.showOverlay("CONTROL MAP", "PHASE 02", true, "neutral");
+    this.clearOverlayStage();
+    this.setControlsLayout(true);
+    const controlsText = this.getControlsText();
+    if (!(await this.typeText(this.ui.overlayBody, controlsText, token))) {
+      return;
+    }
+    this.ui.overlayVisual.innerHTML = this.getControlsVisualMarkup();
+    this.renderOverlayActions("next");
+    this.setStatus("Review the controls, then press NEXT.");
+    const controlsConfirmed = await this.waitForNext(token);
+    if (!controlsConfirmed) {
+      return;
+    }
+
+    this.showOverlay("ROUND BRIEFING", "PHASE 03", true, "neutral");
     this.clearOverlayStage();
     this.setControlsLayout(false);
-    const infoText = this.mode === "bot"
-      ? "TRAILS BECOME PERMANENT WALLS ACROSS THE FULL 180 BY 144 GRID. HARD BOT EVALUATES SPACE; EASY BOT CHOOSES RANDOM SAFE TURNS. PRESS NEXT TO ARM THE COUNTDOWN."
-      : "TRAILS BECOME PERMANENT WALLS ACROSS THE FULL 180 BY 144 GRID. BOTH RIDERS MOVE ON THE SAME TICK, SO CRASHES CAN END IN A DRAW. PRESS NEXT TO ARM THE COUNTDOWN.";
+    const infoText = "TRAILS BECOME PERMANENT WALLS ACROSS THE FULL 180 BY 144 GRID. ALL RIDERS MOVE ON THE SAME TICK. THE ROUND CONTINUES UNTIL ONLY ONE RIDER REMAINS.";
     if (!(await this.typeText(this.ui.overlayBody, infoText, token))) {
       return;
     }
@@ -378,6 +417,40 @@ class TronGame {
     const proceed = await this.waitForNext(token);
     if (!proceed) {
       return;
+    }
+
+    this.clearOverlayStage();
+    this.ui.setupSkipButton?.classList.add("is-hidden");
+    this.setStatus("Get ready...");
+    this.runCountdown();
+  }
+
+  async startQuickSetup() {
+    if (this.state !== "SETUP") {
+      return;
+    }
+
+    this.resolveInteraction("mode", null);
+    this.resolveInteraction("difficulty", null);
+    this.resolveInteraction("next", null);
+
+    const token = ++this.setupToken;
+    this.showOverlay("QUICK SETUP", "CONFIGURE ROUND", true, "neutral");
+    this.clearOverlayStage();
+    this.setControlsLayout(false);
+    this.ui.overlayBody.textContent = "SET HUMAN RIDERS, BOT RIDERS, AND BOT ROUTINE. PRESS NEXT TO START THE COUNTDOWN.";
+    this.renderOverlayActions("setup");
+    this.setStatus("Quick setup ready.");
+
+    const quickSetupConfirmed = await this.waitForNext(token);
+    if (!quickSetupConfirmed || token !== this.setupToken || this.state !== "SETUP") {
+      return;
+    }
+
+    this.grid = this.createGrid();
+    this.players = this.createPlayers();
+    for (const player of this.getPlayers()) {
+      this.markCell(player.x, player.y, player.trailValue);
     }
 
     this.clearOverlayStage();
@@ -427,12 +500,14 @@ class TronGame {
 
     this.elapsedMs += this.tickMs;
 
-    if (this.mode === "bot" && this.players.p2.alive) {
-      this.players.p2.pendingDirection = this.getBotMove();
+    for (const bot of this.getBotPlayers()) {
+      if (bot.alive) {
+        bot.pendingDirection = this.getBotMove(bot);
+      }
     }
 
     const nextMoves = {};
-    for (const [key, player] of Object.entries(this.players)) {
+    for (const player of this.getPlayers()) {
       if (!player.alive) {
         continue;
       }
@@ -442,57 +517,83 @@ class TronGame {
       player.pendingDirection = null;
 
       const vector = DIRECTIONS[resolvedDirection];
-      nextMoves[key] = {
+      nextMoves[player.id] = {
         x: player.x + vector.x,
         y: player.y + vector.y,
       };
     }
 
-    const collisions = {
-      p1: false,
-      p2: false,
-    };
+    const collisions = Object.fromEntries(Object.keys(nextMoves).map((id) => [id, false]));
 
-    for (const [key, move] of Object.entries(nextMoves)) {
+    for (const [id, move] of Object.entries(nextMoves)) {
       if (this.isCollision(move.x, move.y)) {
-        collisions[key] = true;
+        collisions[id] = true;
       }
     }
 
-    if (
-      this.players.p1.alive &&
-      this.players.p2.alive &&
-      nextMoves.p1 &&
-      nextMoves.p2 &&
-      nextMoves.p1.x === nextMoves.p2.x &&
-      nextMoves.p1.y === nextMoves.p2.y
-    ) {
-      collisions.p1 = true;
-      collisions.p2 = true;
+    const destinationOwners = new Map();
+    for (const [id, move] of Object.entries(nextMoves)) {
+      const key = `${move.x},${move.y}`;
+      if (!destinationOwners.has(key)) {
+        destinationOwners.set(key, []);
+      }
+      destinationOwners.get(key).push(id);
     }
 
-    for (const [key, player] of Object.entries(this.players)) {
+    for (const ids of destinationOwners.values()) {
+      if (ids.length > 1) {
+        for (const id of ids) {
+          collisions[id] = true;
+        }
+      }
+    }
+
+    const movingPlayers = this.getPlayers().filter((player) => player.alive && nextMoves[player.id]);
+    for (let index = 0; index < movingPlayers.length; index += 1) {
+      for (let otherIndex = index + 1; otherIndex < movingPlayers.length; otherIndex += 1) {
+        const left = movingPlayers[index];
+        const right = movingPlayers[otherIndex];
+        const leftNext = nextMoves[left.id];
+        const rightNext = nextMoves[right.id];
+        if (
+          leftNext.x === right.x &&
+          leftNext.y === right.y &&
+          rightNext.x === left.x &&
+          rightNext.y === left.y
+        ) {
+          collisions[left.id] = true;
+          collisions[right.id] = true;
+        }
+      }
+    }
+
+    let crashed = false;
+    for (const player of this.getPlayers()) {
       if (!player.alive) {
         continue;
       }
 
-      if (collisions[key]) {
+      if (collisions[player.id]) {
         player.alive = false;
         player.crashUntil = performance.now() + CONFIG.resolveMs;
+        crashed = true;
         continue;
       }
 
-      const move = nextMoves[key];
+      const move = nextMoves[player.id];
       player.x = move.x;
       player.y = move.y;
-      this.markCell(player.x, player.y, key === "p1" ? 1 : 2);
+      this.markCell(player.x, player.y, player.trailValue);
     }
 
     this.render();
     this.syncUi();
 
-    if (!this.players.p1.alive || !this.players.p2.alive) {
+    if (crashed) {
       this.playSound("crash");
+    }
+
+    if (this.getAlivePlayers().length <= 1) {
       this.resolveRound();
     }
   }
@@ -528,31 +629,22 @@ class TronGame {
     this.stopSound("engineLoop");
     this.state = "GAME_OVER";
 
-    let headline = "DRAW!";
-    let subline = "BOTH RIDERS CRASHED";
-    let detail = "Both riders crashed. The final trail layout stays visible until the next round is armed.";
-    let status = "Draw!";
+    const alivePlayers = this.getAlivePlayers();
+    const eliminatedPlayers = this.getPlayers().filter((player) => !player.alive);
+    const winner = alivePlayers[0] ?? null;
+    const headline = winner ? `${winner.label.toUpperCase()} WINS` : "DRAW!";
+    const subline = winner ? `${eliminatedPlayers.length} RIDERS ELIMINATED` : "ALL RIDERS CRASHED";
+    const detail = winner
+      ? `${winner.label} stayed alive. Eliminated: ${eliminatedPlayers.map((player) => player.label).join(", ")}.`
+      : "Every remaining rider crashed on the same tick. The final trail layout stays visible until the next round is armed.";
+    const status = winner ? `${winner.label} wins the round!` : "Draw!";
 
-    if (this.players.p1.alive && !this.players.p2.alive) {
-      this.scores.p1 += 1;
-      headline = "PLAYER 1 WINS";
-      subline = this.mode === "bot" ? "BOT CRASHED" : "PLAYER 2 CRASHED";
-      detail = this.mode === "bot"
-        ? "Player 1 stayed alive. Bot crashed into the closed trail network."
-        : "Player 1 stayed alive. Player 2 crashed into the closed trail network.";
-      status = "Player 1 wins the round!";
-    } else if (!this.players.p1.alive && this.players.p2.alive) {
-      this.scores.p2 += 1;
-      headline = this.mode === "bot" ? "BOT WINS" : "PLAYER 2 WINS";
-      subline = "PLAYER 1 CRASHED";
-      detail = this.mode === "bot"
-        ? "Bot stayed alive. Player 1 crashed into the closed trail network."
-        : "Player 2 stayed alive. Player 1 crashed into the closed trail network.";
-      status = this.mode === "bot" ? "Bot wins the round!" : "Player 2 wins the round!";
+    if (winner) {
+      this.scores[winner.id] = (this.scores[winner.id] ?? 0) + 1;
     }
 
     this.setStatus(status);
-    const tone = this.players.p1.alive && !this.players.p2.alive ? "p1" : !this.players.p1.alive && this.players.p2.alive ? "p2" : "neutral";
+    const tone = winner?.id === "p1" ? "p1" : winner?.id === "p2" ? "p2" : "neutral";
     this.showOverlay(headline, subline, true, tone, "result");
     this.ui.overlayBody.textContent = detail;
     this.ui.overlayVisual.innerHTML = "";
@@ -571,12 +663,16 @@ class TronGame {
     }
 
     this.submittedScore = Boolean(
-      window.ArcadeHighScores?.promptAndSubmit("tron", Math.max(this.scores.p1, this.scores.p2))
+      window.ArcadeHighScores?.promptAndSubmit("tron-3", this.getHighScore())
     );
   }
 
+  getHighScore() {
+    return Math.max(0, ...Object.values(this.scores));
+  }
+
   handleKeyDown(event) {
-    const mapped = this.mode === "bot"
+    const mapped = this.humanCount === 1
       ? SINGLE_PLAYER_ARROW_MAP[event.code] ?? KEYMAP[event.code]
       : KEYMAP[event.code];
     if (!mapped) {
@@ -589,12 +685,8 @@ class TronGame {
       return;
     }
 
-    if (this.mode === "bot" && mapped.player === "p2") {
-      return;
-    }
-
     const player = this.players[mapped.player];
-    if (!player?.alive) {
+    if (!player?.alive || player.kind !== "human") {
       return;
     }
 
@@ -632,11 +724,17 @@ class TronGame {
       this.resolveInteraction("mode", this.mode);
     } else if (action === "difficulty") {
       this.setDifficulty(value);
-      if (this.ui.overlayHeadline.textContent === "QUICK SETUP") {
+      if (this.ui.overlayHeadline.textContent === "MATCH SETUP" || this.ui.overlayHeadline.textContent === "QUICK SETUP") {
         this.renderOverlayActions("setup");
       } else {
         this.resolveInteraction("difficulty", value);
       }
+    } else if (action === "human-count") {
+      this.setHumanCount(Number(value));
+      this.renderOverlayActions("setup");
+    } else if (action === "bot-count") {
+      this.setBotCount(Number(value));
+      this.renderOverlayActions("setup");
     } else if (action === "next") {
       this.resolveInteraction("next", true);
     }
@@ -663,8 +761,42 @@ class TronGame {
   }
 
   setDifficulty(level) {
+    if (level !== "easy" && level !== "hard") {
+      return;
+    }
+
     this.botDifficulty = level;
     this.updateSelectionSummary();
+  }
+
+  setHumanCount(count) {
+    this.humanCount = this.clamp(Math.floor(count), 1, 3);
+    if (this.humanCount + this.botCount < 2) {
+      this.botCount = 1;
+    }
+    this.mode = this.botCount > 0 ? "bot" : "human";
+    this.players = this.createPlayers();
+    this.grid = this.createGrid();
+    for (const player of this.getPlayers()) {
+      this.markCell(player.x, player.y, player.trailValue);
+    }
+    this.updateSelectionSummary();
+    this.render();
+  }
+
+  setBotCount(count) {
+    this.botCount = this.clamp(Math.floor(count), 0, 3);
+    if (this.humanCount + this.botCount < 2) {
+      this.humanCount = 2;
+    }
+    this.mode = this.botCount > 0 ? "bot" : "human";
+    this.players = this.createPlayers();
+    this.grid = this.createGrid();
+    for (const player of this.getPlayers()) {
+      this.markCell(player.x, player.y, player.trailValue);
+    }
+    this.updateSelectionSummary();
+    this.render();
   }
 
   setTickRate(value) {
@@ -744,10 +876,10 @@ class TronGame {
       this.ui.timerDisplay.textContent = `${(this.elapsedMs / 1000).toFixed(1).padStart(4, "0")}s`;
     }
     if (this.ui.scoreP1) {
-      this.ui.scoreP1.textContent = String(this.scores.p1);
+      this.ui.scoreP1.textContent = String(this.scores.p1 ?? 0);
     }
     if (this.ui.scoreP2) {
-      this.ui.scoreP2.textContent = String(this.scores.p2);
+      this.ui.scoreP2.textContent = String(this.scores.p2 ?? 0);
     }
   }
 
@@ -850,12 +982,12 @@ class TronGame {
 
   updateSelectionSummary() {
     if (this.ui.modeSummary) {
-      this.ui.modeSummary.textContent = this.mode === "bot" ? "Bot" : "Human";
+      this.ui.modeSummary.textContent = `${this.humanCount} Human / ${this.botCount} Bot`;
     }
     if (this.ui.difficultySummary) {
       this.ui.difficultySummary.textContent = this.botDifficulty[0].toUpperCase() + this.botDifficulty.slice(1);
     }
-    this.ui.difficultySummaryBox?.classList.toggle("is-hidden", this.mode !== "bot");
+    this.ui.difficultySummaryBox?.classList.toggle("is-hidden", this.botCount === 0);
   }
 
   renderOverlayActions(kind) {
@@ -873,19 +1005,29 @@ class TronGame {
       this.ui.overlayActions.innerHTML = `
         <div class="setup-actions">
           <div class="setup-group">
-            <p class="setup-label">PLAYER 2 MODE</p>
-            <div class="segment-control onboarding-actions">
-              <button class="segment ${this.mode === "human" ? "is-active" : ""}" type="button" data-action="mode" data-value="human">HUMAN</button>
-              <button class="segment ${this.mode === "bot" ? "is-active" : ""}" type="button" data-action="mode" data-value="bot">BOT</button>
+            <p class="setup-label">HUMAN RIDERS</p>
+            <div class="segment-control count-control onboarding-actions">
+              ${[1, 2, 3].map((count) => `
+                <button class="segment ${this.humanCount === count ? "is-active" : ""}" type="button" data-action="human-count" data-value="${count}">${count}</button>
+              `).join("")}
             </div>
           </div>
-          <div class="setup-group ${this.mode !== "bot" ? "is-dimmed" : ""}">
+          <div class="setup-group">
+            <p class="setup-label">BOT RIDERS</p>
+            <div class="segment-control count-control onboarding-actions">
+              ${[0, 1, 2, 3].map((count) => `
+                <button class="segment ${this.botCount === count ? "is-active" : ""}" type="button" data-action="bot-count" data-value="${count}">${count}</button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="setup-group ${this.botCount === 0 ? "is-dimmed" : ""}">
             <p class="setup-label">BOT ROUTINE</p>
             <div class="segment-control onboarding-actions">
               <button class="segment ${this.botDifficulty === "easy" ? "is-active" : ""}" type="button" data-action="difficulty" data-value="easy">EASY</button>
               <button class="segment ${this.botDifficulty === "hard" ? "is-active" : ""}" type="button" data-action="difficulty" data-value="hard">HARD</button>
             </div>
           </div>
+          <p class="setup-label">${this.humanCount + this.botCount} RIDERS ACTIVE</p>
           <button class="small-button next-button" type="button" data-action="next" data-value="true">NEXT</button>
         </div>
       `;
@@ -904,56 +1046,78 @@ class TronGame {
   }
 
   getControlsVisualMarkup() {
-    return this.mode === "bot"
+    const palette = this.getPalette();
+    const humanCards = this.getHumanPlayers().map((player) => `
+      <article class="control-card">
+        <h3 style="color: ${palette[`${player.colorKey}Head`]}">${player.label} Input</h3>
+        ${this.getKeyboardSvg(player.controls, palette[`${player.colorKey}Head`])}
+        <p>${player.label} rides with ${this.getControlCopy(player.controls)}.</p>
+      </article>
+    `).join("");
+    const altInput = this.humanCount === 1
       ? `
-        <div class="control-visuals">
-          <article class="control-card">
-            <h3 class="p1-text">Player 1 Input</h3>
-            ${this.getKeyboardSvg("WASD", "#00FFFF")}
-            <p>Drive manually with WASD. Set your turn before each tick lands.</p>
-          </article>
-          <article class="control-card">
-            <h3 class="p1-text">Player 1 Alt Input</h3>
-            ${this.getKeyboardSvg("ARROWS", "#00FFFF")}
-            <p>Single-player mode also accepts arrow keys for Player 1.</p>
-          </article>
-          <article class="control-card">
-            <h3 class="p2-text">Bot Link</h3>
-            ${this.getBotSvg()}
-            <p>Player 2 runs in ${this.botDifficulty.toUpperCase()} mode with full arena awareness.</p>
-          </article>
-        </div>
+        <article class="control-card">
+          <h3 class="p1-text">Player 1 Alt Input</h3>
+          ${this.getKeyboardSvg("ARROWS", palette.p1Head)}
+          <p>Single-player human mode also accepts arrow keys for Player 1.</p>
+        </article>
       `
-      : `
-        <div class="control-visuals">
-          <article class="control-card">
-            <h3 class="p1-text">Player 1 Input</h3>
-            ${this.getKeyboardSvg("WASD", "#00FFFF")}
-            <p>Player 1 rides with W, A, S, and D.</p>
-          </article>
-          <article class="control-card">
-            <h3 class="p2-text">Player 2 Input</h3>
-            ${this.getKeyboardSvg("ARROWS", "#FF9900")}
-            <p>Player 2 rides with the arrow keys.</p>
-          </article>
-        </div>
-      `;
+      : "";
+    const botCard = this.botCount > 0
+      ? `
+        <article class="control-card">
+          <h3 style="color: ${palette.bot1Head}">Bot Riders</h3>
+          ${this.getBotSvg()}
+          <p>${this.botCount} bot rider${this.botCount === 1 ? "" : "s"} run ${this.botDifficulty.toUpperCase()} routines with full arena awareness.</p>
+        </article>
+      `
+      : "";
+
+    return `<div class="control-visuals">${humanCards}${altInput}${botCard}</div>`;
+  }
+
+  getControlsText() {
+    const humanControls = this.getHumanPlayers()
+      .map((player) => `${player.label.toUpperCase()}: ${player.controls}`)
+      .join(". ");
+    const botText = this.botCount > 0
+      ? ` ${this.botCount} BOT RIDER${this.botCount === 1 ? "" : "S"} USE ${this.botDifficulty.toUpperCase()} ROUTINES.`
+      : "";
+    return `${humanControls}.${botText} ONLY HUMAN RIDERS GET CAMERA PANES.`;
+  }
+
+  getControlCopy(layout) {
+    if (layout === "WASD") {
+      return "W, A, S, and D";
+    }
+    if (layout === "ARROWS") {
+      return "the arrow keys";
+    }
+    return "I, J, K, and L";
   }
 
   getKeyboardSvg(layout, accent) {
-    const labels = layout === "WASD"
-      ? [
-          { x: 82, y: 6, label: "W" },
-          { x: 28, y: 48, label: "A" },
-          { x: 82, y: 48, label: "S" },
-          { x: 136, y: 48, label: "D" },
-        ]
-      : [
-          { x: 82, y: 6, label: "↑" },
-          { x: 28, y: 48, label: "←" },
-          { x: 82, y: 48, label: "↓" },
-          { x: 136, y: 48, label: "→" },
-        ];
+    const keySets = {
+      WASD: [
+        { x: 82, y: 6, label: "W" },
+        { x: 28, y: 48, label: "A" },
+        { x: 82, y: 48, label: "S" },
+        { x: 136, y: 48, label: "D" },
+      ],
+      ARROWS: [
+        { x: 82, y: 6, label: "↑" },
+        { x: 28, y: 48, label: "←" },
+        { x: 82, y: 48, label: "↓" },
+        { x: 136, y: 48, label: "→" },
+      ],
+      IJKL: [
+        { x: 82, y: 6, label: "I" },
+        { x: 28, y: 48, label: "J" },
+        { x: 82, y: 48, label: "K" },
+        { x: 136, y: 48, label: "L" },
+      ],
+    };
+    const labels = keySets[layout] ?? keySets.WASD;
 
     const keys = labels
       .map(
@@ -990,8 +1154,7 @@ class TronGame {
     return this.useColorblindPalette ? CONFIG.colors.colorblind : CONFIG.colors.default;
   }
 
-  getBotMove() {
-    const player = this.players.p2;
+  getBotMove(player) {
     const candidates = this.getSafeMoves(player);
 
     if (candidates.length === 0) {
@@ -999,14 +1162,19 @@ class TronGame {
     }
 
     if (this.botDifficulty === "easy") {
-      return this.chooseEasyBotMove(candidates);
+      return this.chooseEasyBotMove(player, candidates);
     }
 
     let bestScore = -Infinity;
     let bestDirections = [];
 
     for (const candidate of candidates) {
-      const score = this.evaluateHardBotMove(candidate);
+      const score = this.evaluateBotMove(player, candidate, {
+        survivalWeight: 1,
+        mobilityWeight: 0.9,
+        pressureWeight: 0.55,
+        centerWeight: 0.12,
+      });
 
       if (score > bestScore) {
         bestScore = score;
@@ -1035,20 +1203,33 @@ class TronGame {
   getSafeMoves(player, grid = this.grid) {
     return this.getCandidateDirections(player.direction)
       .map((direction) => ({
+        playerId: player.id,
         direction,
         next: this.previewMove(player, direction),
       }))
       .filter((candidate) => !this.isCollisionOnGrid(grid, candidate.next.x, candidate.next.y));
   }
 
-  chooseEasyBotMove(candidates) {
-    const scored = candidates.map((candidate) => ({
-      direction: candidate.direction,
-      score: this.evaluateEasyBotMove(candidate),
-    }));
+  chooseEasyBotMove(player, candidates) {
+    const straightMove = candidates.find((candidate) => candidate.direction === player.direction);
+    if (straightMove && this.countSafeTurns(straightMove.next, straightMove.direction, this.grid) >= 2 && Math.random() < 0.25) {
+      return straightMove.direction;
+    }
+
+    const scored = candidates.map((candidate) => {
+      const mobility = this.countSafeTurns(candidate.next, candidate.direction, this.grid);
+      const space = this.floodFillOnGrid(candidate.next.x, candidate.next.y, this.grid, 260);
+      const opponentRisk = this.getImmediateOpponentRisk(player, candidate.next);
+      const straightBias = candidate.direction === player.direction ? 2 : 0;
+      const centerBias = this.computeCenterBias(candidate.next);
+      return {
+        direction: candidate.direction,
+        score: space * 0.22 + mobility * 18 + straightBias + centerBias * 8 - opponentRisk + Math.random() * 8,
+      };
+    });
     scored.sort((left, right) => right.score - left.score);
 
-    if (Math.random() < 0.2) {
+    if (Math.random() < 0.18) {
       const pool = scored.slice(0, Math.min(2, scored.length));
       return pool[Math.floor(Math.random() * pool.length)].direction;
     }
@@ -1056,130 +1237,121 @@ class TronGame {
     return scored[0].direction;
   }
 
-  evaluateEasyBotMove(candidate) {
-    const human = this.players.p1;
-    const humanResponses = this.getSafeMoves(human);
-    const fallbackResponse = {
-      direction: human.direction,
-      next: this.previewMove(human, human.direction),
-    };
-    const sample = humanResponses.length > 0
-      ? humanResponses[Math.floor(Math.random() * humanResponses.length)]
-      : fallbackResponse;
+  getImmediateOpponentRisk(bot, next) {
+    let risk = 0;
+    for (const opponent of this.getAlivePlayers()) {
+      if (opponent.id === bot.id) {
+        continue;
+      }
 
-    return this.scoreFutureState(candidate, sample, {
-      survivalWeight: 1,
-      territoryWeight: 0.45,
-      mobilityWeight: 0.4,
-      pressureWeight: 0.35,
-      centerWeight: 0.08,
-    });
+      const distance = Math.abs(next.x - opponent.x) + Math.abs(next.y - opponent.y);
+      if (distance <= 2) {
+        risk += 18;
+      }
+
+      const opponentMoves = this.getSafeMoves(opponent);
+      if (opponentMoves.some((move) => move.next.x === next.x && move.next.y === next.y)) {
+        risk += 80;
+      }
+    }
+    return risk;
   }
 
-  evaluateHardBotMove(candidate) {
-    const human = this.players.p1;
-    const humanResponses = this.getSafeMoves(human);
-    const fallbackResponse = {
-      direction: human.direction,
-      next: this.previewMove(human, human.direction),
-    };
-    const responses = humanResponses.length > 0 ? humanResponses : [fallbackResponse];
-    let worstCase = Infinity;
-    let aggregate = 0;
-
-    for (const response of responses) {
-      const score = this.scoreFutureState(candidate, response, {
-        survivalWeight: 1,
-        territoryWeight: 0.8,
-        mobilityWeight: 0.65,
-        pressureWeight: 0.75,
-        centerWeight: 0.14,
-      });
-      aggregate += score;
-      worstCase = Math.min(worstCase, score);
-    }
-
-    return worstCase * 0.85 + (aggregate / responses.length) * 0.15;
-  }
-
-  scoreFutureState(botCandidate, humanCandidate, weights) {
-    const botCrash = this.isCollision(botCandidate.next.x, botCandidate.next.y);
-    const humanCrash = this.isCollision(humanCandidate.next.x, humanCandidate.next.y);
-    const headOn = botCandidate.next.x === humanCandidate.next.x && botCandidate.next.y === humanCandidate.next.y;
-
-    if (headOn) {
-      return -400;
-    }
-    if (botCrash && humanCrash) {
-      return -250;
-    }
-    if (botCrash) {
+  evaluateBotMove(bot, candidate, weights) {
+    if (!bot || this.isCollision(candidate.next.x, candidate.next.y)) {
       return -100000;
     }
-    if (humanCrash) {
-      return 100000;
+
+    const opponents = this.getAlivePlayers().filter((player) => player.id !== bot.id);
+    const blockedCells = [candidate.next];
+    const botSpace = this.floodFillOnGrid(candidate.next.x, candidate.next.y, this.grid, CONFIG.botSpaceSampleLimit, blockedCells);
+    const botMobility = this.countSafeTurns(candidate.next, candidate.direction, this.grid, blockedCells);
+    let pressure = 0;
+    let immediateRisk = 0;
+
+    for (const opponent of opponents) {
+      const opponentMoves = this.getSafeMoves(opponent);
+      const opponentNextMoves = opponentMoves.length > 0
+        ? opponentMoves.map((move) => move.next)
+        : [this.previewMove(opponent, opponent.direction)];
+      const distance = Math.abs(candidate.next.x - opponent.x) + Math.abs(candidate.next.y - opponent.y);
+      const opponentMobility = this.countSafeTurns(opponent, opponent.direction, this.grid, blockedCells);
+      const opponentSpace = this.floodFillOnGrid(opponent.x, opponent.y, this.grid, CONFIG.botSpaceSampleLimit, blockedCells);
+
+      if (opponentNextMoves.some((move) => move.x === candidate.next.x && move.y === candidate.next.y)) {
+        immediateRisk += 450;
+      }
+      if (candidate.next.x === opponent.x && candidate.next.y === opponent.y) {
+        immediateRisk += 250;
+      }
+
+      pressure += Math.max(0, 32 - distance) * 3;
+      pressure += (botSpace - opponentSpace) * 0.08;
+      pressure += (botMobility - opponentMobility) * 24;
     }
 
-    const futureGrid = this.cloneGridWithMoves(botCandidate.next, humanCandidate.next);
-    const territory = this.computeTerritoryControl(botCandidate.next, humanCandidate.next, futureGrid);
-    const botSpace = this.floodFillOnGrid(botCandidate.next.x, botCandidate.next.y, futureGrid);
-    const humanSpace = this.floodFillOnGrid(humanCandidate.next.x, humanCandidate.next.y, futureGrid);
-    const botMobility = this.countSafeTurns(botCandidate.next, botCandidate.direction, futureGrid);
-    const humanMobility = this.countSafeTurns(humanCandidate.next, humanCandidate.direction, futureGrid);
-    const pressure = (botSpace - humanSpace) + (botMobility - humanMobility) * 18;
-    const centerControl = this.computeCenterBias(botCandidate.next) - this.computeCenterBias(humanCandidate.next);
-
     return (
-      territory * weights.territoryWeight +
-      (botSpace - humanSpace) * weights.survivalWeight +
-      (botMobility - humanMobility) * 90 * weights.mobilityWeight +
+      botSpace * weights.survivalWeight +
+      botMobility * 120 * weights.mobilityWeight +
       pressure * weights.pressureWeight +
-      centerControl * 100 * weights.centerWeight
+      this.computeCenterBias(candidate.next) * 100 * weights.centerWeight -
+      immediateRisk
     );
   }
 
-  cloneGridWithMoves(botNext, humanNext) {
+  cloneGridWithMoves(moves) {
     const grid = this.grid.map((row) => row.slice());
-    grid[humanNext.y][humanNext.x] = 1;
-    grid[botNext.y][botNext.x] = 2;
+    for (const { player, next } of moves) {
+      if (next.y >= 0 && next.y < CONFIG.rows && next.x >= 0 && next.x < CONFIG.cols) {
+        grid[next.y][next.x] = player.trailValue;
+      }
+    }
     return grid;
   }
 
-  isCollisionOnGrid(grid, x, y) {
+  isCollisionOnGrid(grid, x, y, blockedCells = []) {
     if (x < 0 || y < 0 || x >= CONFIG.cols || y >= CONFIG.rows) {
       return true;
+    }
+
+    for (const cell of blockedCells) {
+      if (cell.x === x && cell.y === y) {
+        return true;
+      }
     }
 
     return grid[y][x] !== 0;
   }
 
-  floodFillOnGrid(startX, startY, grid) {
+  floodFillOnGrid(startX, startY, grid, limit = Infinity, blockedCells = []) {
     if (startX < 0 || startY < 0 || startX >= CONFIG.cols || startY >= CONFIG.rows) {
       return 0;
     }
 
-    const seen = new Set();
+    const seen = new Uint8Array(CONFIG.cols * CONFIG.rows);
     const queue = [{ x: startX, y: startY }];
+    let cursor = 0;
     let count = 0;
 
-    while (queue.length > 0) {
-      const current = queue.shift();
-      const key = `${current.x},${current.y}`;
+    while (cursor < queue.length && count < limit) {
+      const current = queue[cursor];
+      cursor += 1;
+      const key = current.y * CONFIG.cols + current.x;
 
       if (
-        seen.has(key) ||
-        ((current.x !== startX || current.y !== startY) && this.isCollisionOnGrid(grid, current.x, current.y))
+        seen[key] ||
+        ((current.x !== startX || current.y !== startY) && this.isCollisionOnGrid(grid, current.x, current.y, blockedCells))
       ) {
         continue;
       }
 
-      seen.add(key);
+      seen[key] = 1;
       count += 1;
 
       for (const direction of Object.values(DIRECTIONS)) {
         const next = { x: current.x + direction.x, y: current.y + direction.y };
-        const nextKey = `${next.x},${next.y}`;
-        if (!seen.has(nextKey) && !this.isCollisionOnGrid(grid, next.x, next.y)) {
+        const nextKey = next.y * CONFIG.cols + next.x;
+        if (!seen[nextKey] && !this.isCollisionOnGrid(grid, next.x, next.y, blockedCells)) {
           queue.push(next);
         }
       }
@@ -1247,7 +1419,7 @@ class TronGame {
     return botCount - humanCount;
   }
 
-  countSafeTurns(position, direction, grid) {
+  countSafeTurns(position, direction, grid, blockedCells = []) {
     return this.getCandidateDirections(direction)
       .map((candidateDirection) => {
         const vector = DIRECTIONS[candidateDirection];
@@ -1256,7 +1428,7 @@ class TronGame {
           y: position.y + vector.y,
         };
       })
-      .filter((move) => !this.isCollisionOnGrid(grid, move.x, move.y))
+      .filter((move) => !this.isCollisionOnGrid(grid, move.x, move.y, blockedCells))
       .length;
   }
 
@@ -1277,33 +1449,32 @@ class TronGame {
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, this.viewWidth, this.viewHeight);
 
-    this.drawViewport(viewports.p1, this.players.p1, palette, now);
-    this.drawViewport(viewports.p2, this.players.p2, palette, now);
+    for (const viewport of viewports) {
+      this.drawViewport(viewport, viewport.focusPlayer, palette, now);
+    }
     this.drawSplitChrome(viewports, palette);
   }
 
   getSplitViewports() {
-    const dividerWidth = 4;
-    const halfWidth = Math.max(1, (this.viewWidth - dividerWidth) / 2);
+    const humanPlayers = this.getHumanPlayers();
+    if (humanPlayers.length === 0) {
+      return [];
+    }
 
-    return {
-      p1: this.makeViewport(this.players.p1, {
-        x: 0,
-        y: 0,
-        width: halfWidth,
-        height: this.viewHeight,
-        label: "PLAYER 1",
-        side: "left",
-      }),
-      p2: this.makeViewport(this.players.p2, {
-        x: halfWidth + dividerWidth,
-        y: 0,
-        width: halfWidth,
-        height: this.viewHeight,
-        label: this.mode === "bot" ? "BOT" : "PLAYER 2",
-        side: "right",
-      }),
-    };
+    const dividerWidth = 4;
+    const totalDividerWidth = dividerWidth * (humanPlayers.length - 1);
+    const paneWidth = Math.max(1, (this.viewWidth - totalDividerWidth) / humanPlayers.length);
+
+    return humanPlayers.map((player, index) => this.makeViewport(player, {
+      x: index * (paneWidth + dividerWidth),
+      y: 0,
+      width: paneWidth,
+      height: this.viewHeight,
+      label: player.label.toUpperCase(),
+      side: index === 0 ? "left" : "right",
+      dividerWidth,
+      focusPlayer: player,
+    }));
   }
 
   makeViewport(player, rect) {
@@ -1339,9 +1510,10 @@ class TronGame {
 
     this.drawVisibleGrid(viewport, palette);
     this.drawBoardEdges(viewport);
-    this.drawPlayerInViewport(viewport, this.players.p1, palette.p1Head, now);
-    this.drawPlayerInViewport(viewport, this.players.p2, palette.p2Head, now);
-    this.drawViewportReticle(viewport, focusPlayer, focusPlayer.id === "p1" ? palette.p1Head : palette.p2Head);
+    for (const player of this.getPlayers()) {
+      this.drawPlayerInViewport(viewport, player, this.getHeadColor(player, palette), now);
+    }
+    this.drawViewportReticle(viewport, focusPlayer, this.getHeadColor(focusPlayer, palette));
 
     ctx.restore();
   }
@@ -1355,21 +1527,42 @@ class TronGame {
 
     ctx.strokeStyle = "#111111";
     ctx.lineWidth = 1;
+    ctx.beginPath();
+
+    for (let x = startX; x <= endX; x += 1) {
+      const px = viewport.x + (x - viewport.cameraX) * CONFIG.cellSize;
+      ctx.moveTo(px + 0.5, viewport.y);
+      ctx.lineTo(px + 0.5, viewport.y + viewport.height);
+    }
+
+    for (let y = startY; y <= endY; y += 1) {
+      const py = viewport.y + (y - viewport.cameraY) * CONFIG.cellSize;
+      ctx.moveTo(viewport.x, py + 0.5);
+      ctx.lineTo(viewport.x + viewport.width, py + 0.5);
+    }
+
+    ctx.stroke();
 
     for (let y = startY; y < endY; y += 1) {
       for (let x = startX; x < endX; x += 1) {
-        const px = viewport.x + (x - viewport.cameraX) * CONFIG.cellSize;
-        const py = viewport.y + (y - viewport.cameraY) * CONFIG.cellSize;
         const cell = this.grid[y][x];
 
-        ctx.strokeRect(px + 0.5, py + 0.5, CONFIG.cellSize, CONFIG.cellSize);
-
-        if (cell === 1 || cell === 2) {
-          ctx.fillStyle = cell === 1 ? palette.p1Trail : palette.p2Trail;
+        if (cell > 0) {
+          const px = viewport.x + (x - viewport.cameraX) * CONFIG.cellSize;
+          const py = viewport.y + (y - viewport.cameraY) * CONFIG.cellSize;
+          ctx.fillStyle = this.getTrailColorForCell(cell, palette);
           ctx.fillRect(px + 1, py + 1, CONFIG.cellSize - 2, CONFIG.cellSize - 2);
         }
       }
     }
+  }
+
+  getHeadColor(player, palette) {
+    return palette[`${player.colorKey}Head`] ?? palette.p1Head;
+  }
+
+  getTrailColorForCell(cell, palette) {
+    return palette[TRAIL_COLOR_KEYS[cell]] ?? palette.p1Trail;
   }
 
   drawBoardEdges(viewport) {
@@ -1437,27 +1630,29 @@ class TronGame {
 
   drawSplitChrome(viewports, palette) {
     const { ctx } = this;
-    const dividerX = viewports.p1.width;
+    for (let index = 1; index < viewports.length; index += 1) {
+      const dividerX = viewports[index].x - viewports[index].dividerWidth;
+      ctx.fillStyle = "#02050a";
+      ctx.fillRect(dividerX, 0, viewports[index].dividerWidth, this.viewHeight);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+      ctx.fillRect(dividerX + 1, 0, 1, this.viewHeight);
+      ctx.fillStyle = "rgba(0, 255, 255, 0.28)";
+      ctx.fillRect(dividerX + 2, 0, 1, this.viewHeight);
+    }
 
-    ctx.fillStyle = "#02050a";
-    ctx.fillRect(dividerX, 0, 4, this.viewHeight);
-    ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
-    ctx.fillRect(dividerX + 1, 0, 1, this.viewHeight);
-    ctx.fillStyle = "rgba(0, 255, 255, 0.28)";
-    ctx.fillRect(dividerX + 2, 0, 1, this.viewHeight);
-
-    this.drawViewportLabel(viewports.p1, palette.p1Head);
-    this.drawViewportLabel(viewports.p2, palette.p2Head);
+    for (const viewport of viewports) {
+      this.drawViewportLabel(viewport, this.getHeadColor(viewport.focusPlayer, palette));
+    }
   }
 
   drawViewportLabel(viewport, color) {
     const { ctx } = this;
-    const boxWidth = 140;
+    const boxWidth = Math.min(140, Math.max(78, viewport.width - 24));
     const boxX = viewport.side === "left" ? viewport.x + 12 : viewport.x + viewport.width - boxWidth - 12;
     const labelX = viewport.side === "left" ? viewport.x + 18 : viewport.x + viewport.width - 18;
 
     ctx.save();
-    ctx.font = "700 16px 'Pixelify Sans', monospace";
+    ctx.font = `${viewport.width < 150 ? "700 13px" : "700 16px"} 'Pixelify Sans', monospace`;
     ctx.textAlign = viewport.side === "left" ? "left" : "right";
     ctx.textBaseline = "top";
     ctx.fillStyle = "rgba(0, 0, 0, 0.72)";

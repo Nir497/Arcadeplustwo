@@ -571,7 +571,7 @@ class TronGame {
     }
 
     this.submittedScore = Boolean(
-      window.ArcadeHighScores?.promptAndSubmit("tron", Math.max(this.scores.p1, this.scores.p2))
+      window.ArcadeHighScores?.promptAndSubmit("tron-2", Math.max(this.scores.p1, this.scores.p2))
     );
   }
 

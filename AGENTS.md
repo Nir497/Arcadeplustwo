@@ -1,5 +1,7 @@
 # Repository Guidelines
 
+- At the end of every task, commit and push relevant files to git.
+
 ## Project Structure & Module Organization
 
 This repository is a static multi-game arcade site. The root page is the launcher and shared UI.
@@ -38,7 +40,7 @@ High scores are universal across games in the same browser via `localStorage`, n
 
 - Submit scores with `window.ArcadeHighScores.promptAndSubmit(gameId, score)` at game over.
 - Read leaderboard rows with `window.ArcadeHighScores.getScores(gameId, limit)`.
-- Use stable game ids: `snake`, `pong`, `breaker`, `space-invaders`, `pacman`, `tetris`, `tron`.
+- Use stable game ids: `snake`, `pong`, `breaker`, `space-invaders`, `pacman`, `tetris`, `tron`, `tron-2`, `tron-3`.
 - Scores are browser-local and origin-scoped; they do not sync across devices or browsers.
 
 ## Testing Guidelines

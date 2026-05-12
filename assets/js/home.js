@@ -6,6 +6,8 @@ const GAMES = [
   { id: "pacman", label: "Pacman", color: "orange" },
   { id: "tetris", label: "Tetris", color: "blue" },
   { id: "tron", label: "Tron", color: "red" },
+  { id: "tron-2", label: "Tron 2.0", color: "cyan" },
+  { id: "tron-3", label: "Tron 3.o", color: "yellow" },
 ];
 
 const launcherView = document.getElementById("launcherView");
@@ -34,7 +36,10 @@ function openTronFolder() {
 }
 
 function closeTronFolder(event) {
-  event?.preventDefault();
+  if (event) {
+    event.preventDefault();
+  }
+
   showLauncherView("home");
   tronFolderButton.focus();
 }

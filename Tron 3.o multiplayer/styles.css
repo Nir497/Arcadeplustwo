@@ -375,6 +375,10 @@ h2,
   background: rgba(0, 0, 0, 0.45);
 }
 
+.segment-control.count-control {
+  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+}
+
 .segment,
 .small-button,
 .icon-button {

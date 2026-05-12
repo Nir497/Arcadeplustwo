@@ -1,8 +1,8 @@
 # TRON Light Cycles
 
-Static browser implementation of a two-player TRON light cycle game based on the specs in [`Mechanics specs`](./Mechanics%20specs/).
+Static browser implementation of a multiplayer TRON light cycle game based on the specs in [`Mechanics specs`](./Mechanics%20specs/).
 
-The current build uses a shared 180 by 144 cell arena with a left/right split-screen canvas. Each side follows its rider's local perspective while trails and crashes remain part of the same global board.
+The current build uses a shared 180 by 144 cell arena with 1-3 local human riders and 0-3 bots. Human riders get local camera panes, while bots appear only inside the arena view. Trails and crashes remain part of the same global board, and the round continues until only one rider is left.
 
 Sound assets for later gameplay/audio integration live in [`assets/sounds`](./assets/sounds/).
 
