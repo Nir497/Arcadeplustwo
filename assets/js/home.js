@@ -13,7 +13,6 @@ const GAMES = [
 const launcherView = document.getElementById("launcherView");
 const tronView = document.getElementById("tronView");
 const tronFolderButton = document.getElementById("tronFolderButton");
-const tronBackButton = document.getElementById("tronBackButton");
 const highScoresView = document.getElementById("highScoresView");
 const highScoresButton = document.getElementById("highScoresButton");
 const backButton = document.getElementById("backButton");
@@ -32,16 +31,6 @@ function showLauncherView(view) {
 
 function openTronFolder() {
   showLauncherView("tron");
-  tronBackButton.focus();
-}
-
-function closeTronFolder(event) {
-  if (event) {
-    event.preventDefault();
-  }
-
-  showLauncherView("home");
-  tronFolderButton.focus();
 }
 
 function openScores() {
@@ -97,7 +86,6 @@ function escapeHtml(value) {
 renderTabs();
 
 tronFolderButton.addEventListener("click", openTronFolder);
-tronBackButton.addEventListener("click", closeTronFolder);
 highScoresButton.addEventListener("click", openScores);
 backButton.addEventListener("click", closeScores);
 scoresBackdrop.addEventListener("click", closeScores);
