@@ -1162,29 +1162,10 @@ class TronGame {
     }
 
     if (this.botDifficulty === "easy") {
-      return this.chooseEasyBotMove(player, candidates);
+      return this.chooseImportedEasyBotMove(player, candidates);
     }
 
-    let bestScore = -Infinity;
-    let bestDirections = [];
-
-    for (const candidate of candidates) {
-      const score = this.evaluateBotMove(player, candidate, {
-        survivalWeight: 1,
-        mobilityWeight: 0.9,
-        pressureWeight: 0.55,
-        centerWeight: 0.12,
-      });
-
-      if (score > bestScore) {
-        bestScore = score;
-        bestDirections = [candidate.direction];
-      } else if (score === bestScore) {
-        bestDirections.push(candidate.direction);
-      }
-    }
-
-    return bestDirections[Math.floor(Math.random() * bestDirections.length)];
+    return this.chooseImportedHardBotMove(player, candidates);
   }
 
   getCandidateDirections(currentDirection) {
@@ -1208,6 +1189,70 @@ class TronGame {
         next: this.previewMove(player, direction),
       }))
       .filter((candidate) => !this.isCollisionOnGrid(grid, candidate.next.x, candidate.next.y));
+  }
+
+  chooseImportedEasyBotMove(player, candidates) {
+    const opponent = this.getBotOpponents(player, 1)[0];
+    if (!opponent) {
+      return this.chooseEasyBotMove(player, candidates);
+    }
+
+    const opponentMoves = this.getSafeMoves(opponent);
+    const fallback = {
+      direction: opponent.direction,
+      next: this.previewMove(opponent, opponent.direction),
+    };
+    const sample = opponentMoves.length > 0
+      ? opponentMoves[Math.floor(Math.random() * opponentMoves.length)]
+      : fallback;
+
+    const scored = candidates.map((candidate) => {
+      if (this.isCollisionOnGrid(this.grid, sample.next.x, sample.next.y)) {
+        return { direction: candidate.direction, score: 50000 };
+      }
+
+      const grid = this.cloneGridWithRiderMoves([
+        { player, next: candidate.next },
+        { player: opponent, next: sample.next },
+      ]);
+      return {
+        direction: candidate.direction,
+        score: this.evaluateImportedEasyState(
+          player,
+          candidate.next,
+          candidate.direction,
+          opponent,
+          sample.next,
+          sample.direction,
+          grid,
+        ),
+      };
+    });
+
+    scored.sort((left, right) => right.score - left.score);
+    if (Math.random() < 0.24) {
+      const pool = scored.slice(0, Math.min(3, scored.length));
+      return pool[Math.floor(Math.random() * pool.length)].direction;
+    }
+    return scored[0].direction;
+  }
+
+  chooseImportedHardBotMove(player, candidates) {
+    let bestScore = -Infinity;
+    let bestDirections = [];
+
+    for (const candidate of candidates) {
+      const score = this.evaluateImportedHardMove(player, candidate);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestDirections = [candidate.direction];
+      } else if (score === bestScore) {
+        bestDirections.push(candidate.direction);
+      }
+    }
+
+    return bestDirections[Math.floor(Math.random() * bestDirections.length)];
   }
 
   chooseEasyBotMove(player, candidates) {
@@ -1255,6 +1300,163 @@ class TronGame {
       }
     }
     return risk;
+  }
+
+  evaluateImportedHardMove(bot, candidate) {
+    const opponents = this.getBotOpponents(bot, 1);
+    if (opponents.length === 0) {
+      return this.evaluateBotMove(bot, candidate, {
+        survivalWeight: 1,
+        mobilityWeight: 0.9,
+        pressureWeight: 0.55,
+        centerWeight: 0.12,
+      });
+    }
+
+    const opponentScores = opponents.map((opponent) => this.evaluateImportedHardAgainstOpponent(bot, candidate, opponent));
+    const worstCase = Math.min(...opponentScores);
+    const average = opponentScores.reduce((total, score) => total + score, 0) / opponentScores.length;
+    return worstCase * 0.9 + average * 0.1;
+  }
+
+  evaluateImportedHardAgainstOpponent(bot, candidate, opponent) {
+    const gridAfterBotMove = this.cloneGridWithRiderMoves([{ player: bot, next: candidate.next }]);
+    const opponentResponses = this.getSafeMoves(opponent, gridAfterBotMove);
+    const fallbackResponse = {
+      direction: opponent.direction,
+      next: this.previewMove(opponent, opponent.direction),
+    };
+    const responses = opponentResponses.length > 0 ? opponentResponses : [fallbackResponse];
+    let worstCase = Infinity;
+    let aggregate = 0;
+
+    for (const response of responses) {
+      const score = this.scoreImportedHardFutureState(bot, candidate, opponent, response, gridAfterBotMove);
+      aggregate += score;
+      worstCase = Math.min(worstCase, score);
+    }
+
+    return worstCase * 0.9 + (aggregate / responses.length) * 0.1;
+  }
+
+  scoreImportedHardFutureState(bot, botCandidate, opponent, opponentCandidate, gridAfterBotMove) {
+    const botCrash = this.isCollision(botCandidate.next.x, botCandidate.next.y);
+    const opponentCrash = this.isCollisionOnGrid(gridAfterBotMove, opponentCandidate.next.x, opponentCandidate.next.y);
+    const headOn = botCandidate.next.x === opponentCandidate.next.x && botCandidate.next.y === opponentCandidate.next.y;
+
+    if (headOn) {
+      return -65000;
+    }
+    if (botCrash && opponentCrash) {
+      return -250;
+    }
+    if (botCrash) {
+      return -100000;
+    }
+    if (opponentCrash) {
+      return 100000;
+    }
+
+    const futureGrid = this.cloneGridWithRiderMoves([
+      { player: bot, next: botCandidate.next },
+      { player: opponent, next: opponentCandidate.next },
+    ]);
+    const territory = this.computeImportedTerritoryControl(botCandidate.next, opponentCandidate.next, futureGrid);
+    const botSpace = this.floodFillOnGrid(botCandidate.next.x, botCandidate.next.y, futureGrid, CONFIG.botSpaceSampleLimit);
+    const opponentSpace = this.floodFillOnGrid(opponentCandidate.next.x, opponentCandidate.next.y, futureGrid, CONFIG.botSpaceSampleLimit);
+    const botMobility = this.countSafeTurns(botCandidate.next, botCandidate.direction, futureGrid);
+    const opponentMobility = this.countSafeTurns(opponentCandidate.next, opponentCandidate.direction, futureGrid);
+    const botEscape = this.measureImportedEscapePotential(botCandidate.next, botCandidate.direction, futureGrid, bot.trailValue);
+    const opponentEscape = this.measureImportedEscapePotential(opponentCandidate.next, opponentCandidate.direction, futureGrid, opponent.trailValue);
+    const botCorridorRisk = this.measureImportedCorridorRisk(botCandidate.next, futureGrid);
+    const opponentCorridorRisk = this.measureImportedCorridorRisk(opponentCandidate.next, futureGrid);
+    const pressure = (botSpace - opponentSpace) + (botMobility - opponentMobility) * 18;
+    const centerControl = this.computeCenterBias(botCandidate.next) - this.computeCenterBias(opponentCandidate.next);
+
+    return (
+      territory * 0.95 +
+      (botSpace - opponentSpace) * 1.25 +
+      (botMobility - opponentMobility) * 90 * 0.8 +
+      (botEscape - opponentEscape) * 55 * 0.75 +
+      (opponentCorridorRisk - botCorridorRisk) * 35 * 0.55 +
+      pressure * 0.45 +
+      centerControl * 100 * 0.08
+    );
+  }
+
+  evaluateImportedEasyState(bot, botPos, botDir, opponent, opponentPos, opponentDir, grid) {
+    const botSpace = this.floodFillOnGrid(botPos.x, botPos.y, grid, CONFIG.botSpaceSampleLimit);
+    const opponentSpace = this.floodFillOnGrid(opponentPos.x, opponentPos.y, grid, CONFIG.botSpaceSampleLimit);
+
+    if (botSpace === 0) {
+      return -100000;
+    }
+    if (opponentSpace === 0) {
+      return 100000;
+    }
+    if (botSpace < 10) {
+      return -50000 + botSpace * 1000;
+    }
+
+    const projectedSafety = this.projectedImportedSafety(botPos, botDir, grid, 12, bot.trailValue);
+    if (projectedSafety < 30) {
+      return -20000 + projectedSafety * 600;
+    }
+    if (botSpace > 60 && projectedSafety < botSpace * 0.35) {
+      return -18000 + projectedSafety * 200;
+    }
+
+    const botCorridorRisk = this.measureImportedCorridorRisk(botPos, grid);
+    if (botCorridorRisk > 20) {
+      return -15000 + (40 - Math.min(botCorridorRisk, 40)) * 250;
+    }
+
+    const botEscape = this.measureImportedEscapePotential(botPos, botDir, grid, bot.trailValue);
+    const opponentEscape = this.measureImportedEscapePotential(opponentPos, opponentDir, grid, opponent.trailValue);
+    const botMobility = this.countSafeTurns(botPos, botDir, grid);
+    const opponentMobility = this.countSafeTurns(opponentPos, opponentDir, grid);
+    const opponentCorridorRisk = this.measureImportedCorridorRisk(opponentPos, grid);
+    const pressure = (botSpace - opponentSpace) + (botMobility - opponentMobility) * 18;
+    const centerControl = this.computeCenterBias(botPos) - this.computeCenterBias(opponentPos);
+    const opponentDistance = Math.abs(botPos.x - opponentPos.x) + Math.abs(botPos.y - opponentPos.y);
+    const directionVector = DIRECTIONS[botDir];
+    const approach = directionVector.x * Math.sign(opponentPos.x - botPos.x) + directionVector.y * Math.sign(opponentPos.y - botPos.y);
+    const avoidApproach = opponentDistance < 10 ? -approach * (10 - opponentDistance) * 20 : 0;
+    const consistency = botSpace > 800 && botDir === bot.direction ? 150 : botSpace > 300 && botDir === bot.direction ? 80 : botDir === bot.direction ? 35 : 0;
+    const serpentine = this.countTrailNeighbors(botPos, grid, bot.trailValue) === 2 ? 90 : 0;
+    const emptyCount = this.countEmptyCells(grid);
+    const separated = (botSpace + opponentSpace) <= emptyCount + 20;
+
+    if (separated) {
+      return botSpace * 2 + projectedSafety * 0.8 + botEscape * 0.5 - botCorridorRisk * 3 + consistency + serpentine * 1.5;
+    }
+
+    const territory = this.computeImportedTerritoryControl(botPos, opponentPos, grid);
+    return (
+      territory * 0.95 +
+      (botSpace - opponentSpace) * 1.25 +
+      projectedSafety * 0.4 +
+      (botEscape - opponentEscape) * 55 * 0.75 +
+      (botMobility - opponentMobility) * 90 * 0.8 +
+      (opponentCorridorRisk - botCorridorRisk) * 35 * 0.55 -
+      botCorridorRisk * 5 +
+      pressure * 0.45 +
+      centerControl * 100 * 0.08 +
+      avoidApproach +
+      consistency +
+      serpentine
+    );
+  }
+
+  getBotOpponents(bot, limit = Infinity) {
+    return this.getAlivePlayers()
+      .filter((player) => player.id !== bot.id)
+      .sort((left, right) => {
+        const leftDistance = Math.abs(left.x - bot.x) + Math.abs(left.y - bot.y);
+        const rightDistance = Math.abs(right.x - bot.x) + Math.abs(right.y - bot.y);
+        return leftDistance - rightDistance;
+      })
+      .slice(0, limit);
   }
 
   evaluateBotMove(bot, candidate, weights) {
@@ -1307,6 +1509,222 @@ class TronGame {
       }
     }
     return grid;
+  }
+
+  cloneGridWithRiderMoves(moves) {
+    const grid = this.grid.map((row) => row.slice());
+    for (const { player, next } of moves) {
+      if (next.y >= 0 && next.y < CONFIG.rows && next.x >= 0 && next.x < CONFIG.cols) {
+        grid[next.y][next.x] = player.trailValue;
+      }
+    }
+    return grid;
+  }
+
+  countEmptyCells(grid) {
+    let count = 0;
+    for (let y = 0; y < CONFIG.rows; y += 1) {
+      for (let x = 0; x < CONFIG.cols; x += 1) {
+        if (grid[y][x] === 0) {
+          count += 1;
+        }
+      }
+    }
+    return count;
+  }
+
+  projectedImportedSafety(startPosition, startDirection, grid, steps, trailValue) {
+    let position = startPosition;
+    let direction = startDirection;
+    const projectedGrid = grid.map((row) => row.slice());
+    let minSafety = this.floodFillOnGrid(position.x, position.y, projectedGrid, CONFIG.botSpaceSampleLimit);
+
+    for (let index = 0; index < steps; index += 1) {
+      const moves = this.getSafeMoves({ id: "projection", x: position.x, y: position.y, direction }, projectedGrid);
+      if (moves.length === 0) {
+        return 0;
+      }
+
+      let bestMove = null;
+      let bestSpace = -1;
+      for (const move of moves) {
+        const space = this.floodFillOnGrid(move.next.x, move.next.y, projectedGrid, CONFIG.botSpaceSampleLimit);
+        if (space > bestSpace) {
+          bestSpace = space;
+          bestMove = move;
+        }
+      }
+
+      projectedGrid[bestMove.next.y][bestMove.next.x] = trailValue;
+      minSafety = Math.min(minSafety, bestSpace);
+      position = bestMove.next;
+      direction = bestMove.direction;
+    }
+
+    return minSafety;
+  }
+
+  measureImportedEscapePotential(position, direction, grid, trailValue) {
+    const nextMoves = this.getCandidateDirections(direction)
+      .map((candidateDirection) => {
+        const vector = DIRECTIONS[candidateDirection];
+        return {
+          direction: candidateDirection,
+          next: {
+            x: position.x + vector.x,
+            y: position.y + vector.y,
+          },
+        };
+      })
+      .filter((candidate) => !this.isCollisionOnGrid(grid, candidate.next.x, candidate.next.y));
+
+    if (nextMoves.length === 0) {
+      return -10;
+    }
+
+    let bestFutureSpace = 0;
+    let totalFutureSpace = 0;
+    for (const move of nextMoves) {
+      const futureGrid = grid.map((row) => row.slice());
+      futureGrid[move.next.y][move.next.x] = trailValue;
+      const space = this.floodFillOnGrid(move.next.x, move.next.y, futureGrid, CONFIG.botSpaceSampleLimit);
+      bestFutureSpace = Math.max(bestFutureSpace, space);
+      totalFutureSpace += space;
+    }
+
+    return nextMoves.length * 3 + bestFutureSpace * 0.08 + (totalFutureSpace / nextMoves.length) * 0.03;
+  }
+
+  measureImportedCorridorRisk(position, grid) {
+    const seen = new Set();
+    const queue = [{ x: position.x, y: position.y, depth: 0 }];
+    let cursor = 0;
+    let risk = 0;
+
+    while (cursor < queue.length) {
+      const current = queue[cursor];
+      cursor += 1;
+      const key = `${current.x},${current.y}`;
+
+      if (seen.has(key) || current.depth > 12) {
+        continue;
+      }
+      seen.add(key);
+
+      const exits = Object.values(DIRECTIONS)
+        .map((direction) => ({
+          x: current.x + direction.x,
+          y: current.y + direction.y,
+        }))
+        .filter((next) => !this.isCollisionOnGrid(grid, next.x, next.y))
+        .length;
+
+      if (exits <= 1) {
+        risk += 4;
+      } else if (exits === 2) {
+        risk += 1;
+      }
+
+      for (const direction of Object.values(DIRECTIONS)) {
+        const next = {
+          x: current.x + direction.x,
+          y: current.y + direction.y,
+          depth: current.depth + 1,
+        };
+        const nextKey = `${next.x},${next.y}`;
+        if (!seen.has(nextKey) && !this.isCollisionOnGrid(grid, next.x, next.y)) {
+          queue.push(next);
+        }
+      }
+    }
+
+    return risk;
+  }
+
+  computeImportedTerritoryControl(botStart, opponentStart, grid) {
+    const total = CONFIG.cols * CONFIG.rows;
+    const distances = new Int16Array(total).fill(-1);
+    const owners = new Uint8Array(total);
+    const queue = [];
+    const botIndex = botStart.y * CONFIG.cols + botStart.x;
+    const opponentIndex = opponentStart.y * CONFIG.cols + opponentStart.x;
+    distances[botIndex] = 0;
+    owners[botIndex] = 1;
+    queue.push(botIndex);
+    distances[opponentIndex] = 0;
+    owners[opponentIndex] = 2;
+    queue.push(opponentIndex);
+
+    let botCount = 1;
+    let opponentCount = 1;
+    if (botIndex === opponentIndex) {
+      owners[botIndex] = 3;
+      botCount = 0;
+      opponentCount = 0;
+    }
+
+    let cursor = 0;
+    const neighbors = [-1, 1, -CONFIG.cols, CONFIG.cols];
+    while (cursor < queue.length) {
+      const index = queue[cursor];
+      cursor += 1;
+      const x = index % CONFIG.cols;
+      const y = (index / CONFIG.cols) | 0;
+      const distance = distances[index];
+      const owner = owners[index];
+      if (owner === 3) {
+        continue;
+      }
+
+      for (const delta of neighbors) {
+        const nx = x + (delta === -1 ? -1 : delta === 1 ? 1 : 0);
+        const ny = y + (delta === -CONFIG.cols ? -1 : delta === CONFIG.cols ? 1 : 0);
+        if (nx < 0 || ny < 0 || nx >= CONFIG.cols || ny >= CONFIG.rows) {
+          continue;
+        }
+
+        const nextIndex = ny * CONFIG.cols + nx;
+        if (grid[ny][nx] !== 0) {
+          continue;
+        }
+
+        if (distances[nextIndex] === -1) {
+          distances[nextIndex] = distance + 1;
+          owners[nextIndex] = owner;
+          if (owner === 1) {
+            botCount += 1;
+          } else {
+            opponentCount += 1;
+          }
+          queue.push(nextIndex);
+        } else if (distances[nextIndex] === distance + 1 && owners[nextIndex] !== owner && owners[nextIndex] !== 3) {
+          if (owners[nextIndex] === 1) {
+            botCount -= 1;
+          } else {
+            opponentCount -= 1;
+          }
+          owners[nextIndex] = 3;
+        }
+      }
+    }
+
+    return botCount - opponentCount;
+  }
+
+  countTrailNeighbors(position, grid, trailValue) {
+    return Object.values(DIRECTIONS)
+      .map((direction) => ({
+        x: position.x + direction.x,
+        y: position.y + direction.y,
+      }))
+      .filter((next) => (
+        next.x >= 0 &&
+        next.y >= 0 &&
+        next.x < CONFIG.cols &&
+        next.y < CONFIG.rows &&
+        grid[next.y][next.x] === trailValue
+      ))
+      .length;
   }
 
   isCollisionOnGrid(grid, x, y, blockedCells = []) {

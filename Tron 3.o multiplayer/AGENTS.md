@@ -2,12 +2,15 @@
 
 ## Project Structure & Module Organization
 
-This repository contains small browser games as separate folders:
+This repository contains a static TRON Light Cycles browser game:
 
-- `Tron/`: playable TRON Light Cycles build (`index.html`, `styles.css`, `game.js`) plus specs in `Tron/Mechanics specs/`.
-- `Pong/`: design and mechanics documents in `Pong/Docs/`.
+- `index.html`: playable TRON Light Cycles page.
+- `styles.css`: game UI, overlay, and arena styling.
+- `game.js`: TRON gameplay, setup flow, bot AI, collision logic, and canvas rendering.
+- `Mechanics specs/`: TRON design and gameplay specification documents.
+- `assets/sounds/`: local game audio assets.
 
-Each game should stay self-contained. Keep HTML, CSS, JS, and design docs inside that game’s directory rather than sharing loose files at the repo root.
+Keep the game dependency-free and self-contained in this directory. Use relative paths so it works from a local static server and GitHub Pages.
 
 ## Build, Test, and Development Commands
 
@@ -15,12 +18,12 @@ This repo is static and does not use a build step.
 
 - `python3 -m http.server`  
   Serve the repository locally for browser testing.
-- `open Tron/index.html`  
+- `open index.html`
   Quick local launch on macOS.
-- `node --check Tron/game.js`  
+- `node --check game.js`
   Syntax-check the TRON game script after edits.
 
-If you add another game, include an equivalent syntax-check command for its JS entry file.
+If you add another JS entry file, include an equivalent syntax-check command for it.
 
 ## Coding Style & Naming Conventions
 
@@ -37,8 +40,13 @@ Keep the project dependency-free unless there is a strong reason to add tooling.
 There is no automated test suite yet. Minimum validation for UI changes:
 
 - run `node --check` on edited JS files
+- run `git diff --check`
 - open the game in a browser and test the full interaction flow
-- verify keyboard input, overlays, and restart behavior
+- verify quick setup, full setup, overlays, countdown, restart behavior, and result screens
+- verify keyboard input for Player 1 `WASD`, Player 2 arrow keys, and Player 3 `IJKL`
+- test at least `1 human + 1 bot`, `1 human + 3 bots`, `2 humans + 0 bots`, and `3 humans + 3 bots`
+- verify bots have no dedicated camera panes, can eliminate each other, and the round continues until one rider remains
+- compare Easy and Hard bot routines after bot AI changes
 
 When adding tests later, place them inside the relevant game folder and name them after the feature under test, for example `tron-input.test.js`.
 
@@ -53,4 +61,4 @@ Pull requests should include a concise summary, affected game folder, manual tes
 
 ## Documentation & Specs
 
-When gameplay or UI changes, update the matching design/mechanics docs in the same game folder. For TRON, keep `Tron/Mechanics specs/tron_design.docx` and `tron_gdd.docx` aligned with implementation.
+When gameplay or UI changes, update the matching design/mechanics docs in `Mechanics specs/`. Keep `tron_design.docx` and `tron_gdd.docx` aligned with implementation.
